@@ -1,405 +1,494 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTC Real-Time Data - Welcome to Real-Time BTC Data</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            background-color: #F0F0F0;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexTrade — Demo Exchange</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050d14;
+    --surface: #0a1929;
+    --card: #0d2137;
+    --border: #0e3254;
+    --accent: #00d4ff;
+    --green: #00e676;
+    --red: #ff1744;
+    --yellow: #ffd740;
+    --text: #e0f0ff;
+    --muted: #4a7a9b;
+    --font-head: 'Orbitron', monospace;
+    --font-body: 'Inter', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,212,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 90% 80%, rgba(255,107,53,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        header {
-            width: 100%;
-            background-color: #f0f0f0;
-            padding: 20px 0;
-            height: 100px;
-        }
+  /* TOP NAV */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: rgba(5,13,20,0.97);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+  }
+  .logo {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+  }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .demo-tag {
+    background: rgba(255,215,64,0.15);
+    color: var(--yellow);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,215,64,0.3);
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(0,230,118,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(0,230,118,0); }
+  }
 
-        nav ul {
-            display: flex;
-            justify-content: center;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+  /* MENU BAR */
+  .menu-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 16px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .menu-bar::-webkit-scrollbar { display: none; }
+  .menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+  }
+  .menu-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .menu-btn.active { background: rgba(0,212,255,0.12); border-color: var(--accent); color: var(--accent); }
+  .menu-btn span { font-size: 15px; }
 
-        nav ul li {
-            margin: 0 10px;
-            position: relative;
-        }
-
-        nav ul li a {
-            color: #000000;
-            text-decoration: none;
-            font-size: 15px;
-            padding: 10px 20px;
-            border: 0.1px solid #0AFFFF;
-            border-radius: 200px;
-            position: relative;
-            overflow: hidden;
-            transition: color 0.3s, border-color 0.3s, box-shadow 0.3s, text-shadow 0.3s, background-color 0.3s, border-width 0.3s;
-            background-color: #F7FFFF;
-            box-shadow: 0 0 5px rgba(250, 42, 85, 0.5);
-        }
-
-        nav ul li a::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            background: radial-gradient(circle at 30% 30%, rgba(0, 255, 255, 0.8), transparent 70%);
-            border-radius: 50%;
-            animation: neonGlow 1.5s linear infinite alternate;
-            z-index: -1;
-            opacity: 0;
-        }
-
-        nav ul li a:hover::before {
-            opacity: 1;
-        }
-
-        nav ul li a:hover {
-            color: #fff;
-            border-color: #14A3C7;
-            box-shadow: 0 0 10px rgba(20, 163, 199, 0.5);
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-        }
-
-        nav ul li a:active,
-        nav ul li a:focus {
-            color: #333;
-            background-color: #fff;
-            border-color: #14A3C7;
-            border-width: 2px;
-            box-shadow: 0 0 200px rgba(20, 163, 199, 1), 0 0 50px rgba(20, 163, 199, 1);
-        }
-
-        @keyframes neonGlow {
-            from {
-                transform: scale(1);
-            }
-            to {
-                transform: scale(1.1);
-                opacity: 0;
-            }
-        }
-
-        .top-left-logo {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            align-items: center;
-            font-size: 18px;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .logo-with-border {
-            font-size: 40px;
-            color: #f7931a;
-            margin-right: 10px;
-        }
-
-        .cube {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            transform-style: preserve-3d;
-            transform: rotateX(-30deg) rotateY(-45deg);
-            animation: rotate 10s infinite linear;
-            background-color: #fff;
-            margin-top: 20px;
-        }
-
-        .face {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #fff;
-            border: 0.5px solid #000000; /* Added border to each face */
-        }
-
-        .cube-logo {
-            font-size: 130px;
-            color: #342D7E;
-            border: 2px solid #ccc;
-            border-radius: 50%;
-            padding: 7px;
-        }
-
-        .face.front  { transform: translateZ(100px); }
-        .face.back   { transform: rotateY(180deg) translateZ(100px); }
-        .face.right  { transform: rotateY(90deg) translateZ(100px); }
-        .face.left   { transform: rotateY(-90deg) translateZ(100px); }
-        .face.top    { transform: rotateX(90deg) translateZ(100px); }
-        .face.bottom { transform: rotateX(-90deg) translateZ(100px); }
-
-        @keyframes rotate {
-            from { transform: rotateX(-30deg) rotateY(-45deg); }
-            to { transform: rotateX(-30deg) rotateY(315deg); }
-        }
-
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            width: 80%;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-
-        .welcome-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%; /* Ensure the container takes full width */
-            position: relative; /* Set the position to relative */
-        }
-
-        .btc-text {
-            text-align: center; /* Center the title */
-            font-size: 25px;
-            font-weight: bold;
-            width: auto; /* Ensure the text takes full width */
-            position: absolute; /* Use absolute positioning */
-            top: -865px; /* Adjust this value to move the text up or down */
-            left: 0; /* Move the text to the left */
-            transform: translateX(-20%); /* Center the text horizontally */
-        }
-
-        .welcome-text {
-            text-align: left; /* Align the text to the left */
-            font-size: 16px;
-            line-height: 1.8;
-            width: 100%; /* Ensure the text takes full width */
-            max-width: 270px; /* Set a maximum width to limit the text width */
-            margin: 0 auto; /* Center the text within the container */
-            position: absolute; /* Use absolute positioning */
-            top: -810px; /* Adjust this value to move the text up or down */
-            left: -40px; /* Adjust this value to move the text left or right */
-        }
-
-        .mujahid-image {
-            max-width: 150px; /* Adjust image size */
-            height: auto;
-            border-radius: 50%; /* Rounded corners */
-            position: absolute;
-            top: 130px; /* Adjust top position */
-            right: 50px; /* Adjust right position */
-        }
-
-        .search-container {
-            position: absolute; /* Changed to absolute for precise positioning */
-            top: 340px; /* Adjust this value to move the search bar up or down */
-            left: 50px; /* Adjust this value to move the search bar left or right */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }  
-
-        .search-container input[type="text"] {
-            font-size: 18px; /* Increase the font size */
-            color: #000; /* Set the text color to black */
-            padding: 8px 15px; /* Add padding */
-            border: 2px solid #ccc; /* Add a border */
-            border-radius: 5px 0 0 5px; /* Add rounded corners to the left side */
-            outline: none;
-            width: 350px; /* Set the width of the input field */
-            margin-right: -5px; /* Adjust the margin to control spacing between the input and button */
-        }
-
-        .search-container input:focus {
-            border-color: orange; /* Change border color on focus */
-            box-shadow: 0 0 100px rgba(255, 165, 0, 0.5); /* Add orange shadow on focus */
-        }
-
-        .search-container input::placeholder {
-            color: lightgray; /* Set the placeholder text color */
-            font-size: 20px; /* Increase the placeholder font size */
-        }
-
-        .search-container .search-button {
-            font-size: 18px; /* Increase the font size */
-            color: #fff;
-            background-color: #FFA500; /* Set the background color */
-            border: 2px solid #FFA500; /* Set the border */
-            padding: 8px 15px; /* Add padding */
-            border-radius: 0 5px 5px 0;/* Add rounded corners to the right side */
-            cursor: pointer;
-            outline: none;
-            transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s; /* Added transition for smooth effect */
-        }
-
-        .search-container .search-button:active {
-            background-color: #fff; /* Change background color on click */
-            border-color: greenyellow; /* Change border color on click */
-            color: black; /* Change text color on click */
-            box-shadow: 0 0 50px greenyellow; /* Add greenyellow shadow on click */
-        }
-
-        .image-container {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .image-container img {
-            max-width: 35%;
-            height: auto;
-            border: 2px solid #a14a3c7;
-            border-radius: 200px;
-            box-shadow: 0 0 50px rgba(20, 163, 199, 1);
-        }
-
-        footer {
-            background-color: #F0F0F0;
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-            width: 100%;
-        }
-
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .social-icons a {
-            color: white;
-            text-decoration: none;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            transition: background-color 0.3s;
-        }
-
-        .social-icons a.x {
-            background-color: #000000;
-        }
-
-        .social-icons a.instagram {
-            background-color: #e4405f;
-        }
-        
-        .social-icons a.youtube {
-            background-color: #FF0030;
-        }
-
-        .social-icons a.whatsapp {
-            background-color: #2BD315;
-        }
-
-        .social-icons a.snapchat {
-            background-color: #FFED00;
-            color: #000; /* Set the icon color to black */
-        }
-
-        .social-icons a.threads {
-    background-color: #000000;
+  /* MAIN */
+  main {
     position: relative;
-}
-.social-icons a.threads::before {
-    content: '@';
-    color: white;
-    font-size: 21.4px; /* Adjust the font size as needed */
+    z-index: 1;
+    padding: 20px 16px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* BALANCE CARD */
+  .balance-card {
+    background: linear-gradient(135deg, #0d2137 0%, #0a3355 60%, #0d2137 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+  .balance-card::before {
+    content: '';
     position: absolute;
-    top: 46%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
+    top: -60px; left: -40px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(0,212,255,0.1), transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .balance-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .balance-amount {
+    font-family: var(--font-head);
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .balance-amount span { font-size: 20px; color: var(--muted); font-weight: 400; }
+  .balance-change {
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .balance-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .bstat {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+  .bstat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .bstat-value { font-family: var(--font-head); font-size: 13px; font-weight: 600; }
+  .g { color: var(--green); }
+  .y { color: var(--yellow); }
+  .r { color: var(--red); }
 
-.social-icons a.telegram {
-            background-color: #00C2FF;
-        }
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-title a { font-size: 11px; color: var(--accent); text-decoration: none; }
 
-        .social-icons a:hover {
-            opacity: 0.8;
-        }
-    </style>
+  /* NO TRADES */
+  .no-trades {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s 0.15s ease both;
+  }
+  .no-trades-icon { font-size: 40px; margin-bottom: 10px; }
+  .no-trades h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .no-trades p { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .start-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background: var(--accent);
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 10px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .start-btn:hover { background: #33ddff; box-shadow: 0 4px 20px rgba(0,212,255,0.4); }
+
+  /* MARKET LIST */
+  .market-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeUp 0.4s 0.2s ease both;
+  }
+  .market-row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .market-row:hover { border-color: var(--accent); transform: translateX(3px); }
+  .mr-left { display: flex; align-items: center; gap: 12px; }
+  .coin-icon {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .mr-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .mr-sym { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .mr-right { text-align: right; }
+  .mr-price { font-family: var(--font-head); font-size: 14px; font-weight: 600; color: var(--text); }
+  .mr-change { font-size: 12px; font-weight: 600; margin-top: 2px; }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PORTFOLIO CHART */
+  .portfolio-chart {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s 0.1s ease both;
+  }
+  .pf-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .pf-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .pf-value { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--green); }
+  svg.mini-chart { width: 100%; height: 60px; }
+
+  /* ERROR */
+  .api-error {
+    background: rgba(255,23,68,0.08);
+    border: 1px solid rgba(255,23,68,0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--red);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+</style>
 </head>
 <body>
-    <header>
-        <div class="top-left-logo">
-            <span class="fab fa-bitcoin logo-with-border"></span>
-            <span>Self Mujahid</span>
+
+<header>
+  <div class="top-bar">
+    <div class="logo">NEX<span>TRADE</span></div>
+    <div class="header-right">
+      <div class="demo-tag">⚡ DEMO</div>
+      <div class="live-dot" id="liveDot"></div>
+    </div>
+  </div>
+  <div class="menu-bar">
+    <a href="index.html" class="menu-btn active"><span>🏠</span> Home</a>
+    <a href="prices.html" class="menu-btn"><span>📊</span> Prices</a>
+    <a href="spot.html" class="menu-btn"><span>💱</span> Spot</a>
+    <a href="futures.html" class="menu-btn"><span>🚀</span> Futures</a>
+    <a href="analytics.html" class="menu-btn"><span>🔍</span> Analytics</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- BALANCE -->
+  <div class="balance-card">
+    <div class="balance-label">Demo Portfolio Value</div>
+    <div class="balance-amount">$10,000<span>.00</span></div>
+    <div class="balance-change">Starting Balance — No trades open</div>
+    <div class="balance-stats">
+      <div class="bstat">
+        <div class="bstat-label">Available</div>
+        <div class="bstat-value y">$10,000</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-label">In Trades</div>
+        <div class="bstat-value r">$0.00</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-label">Total P&L</div>
+        <div class="bstat-value g">$0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO CHART -->
+  <div class="portfolio-chart">
+    <div class="pf-header">
+      <div class="pf-title">Balance History</div>
+      <div class="pf-value">$10,000.00</div>
+    </div>
+    <svg class="mini-chart" id="portfolioChart" viewBox="0 0 400 60" preserveAspectRatio="none"></svg>
+  </div>
+
+  <!-- ACTIVE TRADES -->
+  <div class="section-title">
+    <span>Active Trades</span>
+    <a href="futures.html">Open Trade →</a>
+  </div>
+
+  <div class="no-trades">
+    <div class="no-trades-icon">📭</div>
+    <h3>No Open Trades</h3>
+    <p>Aapne abhi koi trade nahi ki.<br>Spot ya Futures se shuru karein.</p>
+    <a href="futures.html" class="start-btn">Start Trading</a>
+  </div>
+
+  <!-- LIVE MARKETS -->
+  <div class="section-title">
+    <span>Live Market Prices</span>
+    <a href="prices.html">See All →</a>
+  </div>
+
+  <div id="marketContainer">
+    <div class="loading">
+      <div class="spinner"></div>
+      Live prices load ho rahi hain...
+    </div>
+  </div>
+
+</main>
+
+<script>
+// Portfolio flat line (no trades)
+function renderPortfolioChart() {
+  const svg = document.getElementById('portfolioChart');
+  const w = 400, h = 60;
+  const y = h / 2;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polygon points="0,${h} 0,${y} ${w},${y} ${w},${h}" fill="url(#pg)"/>
+    <line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <circle cx="${w}" cy="${y}" r="4" fill="#00d4ff"/>
+  `;
+}
+
+// CoinGecko free API — real prices
+const COINS = [
+  { id: 'bitcoin',      name: 'Bitcoin',    sym: 'BTC',  icon: '₿', color: '#f7931a' },
+  { id: 'ethereum',     name: 'Ethereum',   sym: 'ETH',  icon: 'Ξ', color: '#627eea' },
+  { id: 'solana',       name: 'Solana',     sym: 'SOL',  icon: '◎', color: '#9945ff' },
+  { id: 'binancecoin',  name: 'BNB',        sym: 'BNB',  icon: 'B', color: '#f3ba2f' },
+  { id: 'ripple',       name: 'XRP',        sym: 'XRP',  icon: '✕', color: '#00aae4' },
+  { id: 'dogecoin',     name: 'Dogecoin',   sym: 'DOGE', icon: 'Ð', color: '#c3a634' },
+  { id: 'cardano',      name: 'Cardano',    sym: 'ADA',  icon: '₳', color: '#0033ad' },
+  { id: 'tron',         name: 'TRON',       sym: 'TRX',  icon: 'T', color: '#ff0013' },
+];
+
+let priceData = {};
+
+async function fetchPrices() {
+  const ids = COINS.map(c => c.id).join(',');
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    priceData = data;
+    renderMarkets(data);
+    document.getElementById('liveDot').style.background = '#00e676';
+  } catch (e) {
+    document.getElementById('marketContainer').innerHTML = `
+      <div class="api-error">
+        ⚠️ Live prices load nahi hui. Internet check karein ya thodi der mein refresh karein.
+      </div>`;
+    document.getElementById('liveDot').style.background = '#ff1744';
+  }
+}
+
+function renderMarkets(data) {
+  const html = COINS.map(c => {
+    const info = data[c.id];
+    if (!info) return '';
+    const price = info.usd;
+    const change = info.usd_24h_change;
+    const up = change >= 0;
+    return `
+    <a href="prices.html" class="market-row">
+      <div class="mr-left">
+        <div class="coin-icon" style="background:${c.color}22;color:${c.color}">${c.icon}</div>
+        <div>
+          <div class="mr-name">${c.name}</div>
+          <div class="mr-sym">${c.sym}/USDT</div>
         </div>
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Real-Time BTC Data</a></li>
-                <li><a href="#">Chart</a></li>
-                <li><a href="#">Analyse</a></li>
-                <li><a href="#">About</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <div class="welcome-container">
-            <h1 class="btc-text">BTC Real-Time Data</h1>
-            <p class="welcome-text">Welcome to the real-time BTC data dashboard. Here you can view the latest Bitcoin trends, market analysis, and more.</p>
+      </div>
+      <div class="mr-right">
+        <div class="mr-price">$${fmt(price)}</div>
+        <div class="mr-change" style="color:${up ? 'var(--green)' : 'var(--red)'}">
+          ${up ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%
         </div>
-        <div class="image-container">
-            <img class="mujahid-image" src="https://www.dropbox.com/scl/fi/cuqcpx0j01krwytnnzymn/20240628_090111-removebg-preview.png?rlkey=pq4yr623hr742r81hit5ldj27&dl=1" alt="Mujahid Tasveer">
-        </div>
-        <div class="search-container">
-            <input type="text" placeholder="Search BTC data...">
-            <button class="search-button">Search</button>
-        </div>
-        <div class="cube">
-            <div class="face front"><i class="cube-logo fab fa-bitcoin"></i></div>
-            <div class="face back"><i class="cube-logo fab fa-bitcoin"></i></div>
-            <div class="face right"><i class="cube-logo fab fa-bitcoin"></i></div>
-            <div class="face left"><i class="cube-logo fab fa-bitcoin"></i></div>
-            <div class="face top"><i class="cube-logo fab fa-bitcoin"></i></div>
-            <div class="face bottom"><i class="cube-logo fab fa-bitcoin"></i></div>
-        </div>
-    </main>
-    <footer>
-        <div class="social-icons">
-            <a href="https://x.com/SelfMujahid?t=7F0NPcPgOu0Y44Mci4M_qA&s=09" class="x"><i class="fab fa-x"></i></a>
-            <a href="https://youtube.com/@selfmujahid?si=4nbeFdlCDSwBvVIX" class="youtube"><i class="fab fa-youtube"></i></a>
-            <a href="https://whatsapp.com/channel/0029Va9QorTBKfiAiPzPFi2o" class="whatsapp"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://www.snapchat.com/add/selfmujahid?share_id=LpEs56l2VFo&locale=en-PK" class="snapchat"><i class="fab fa-snapchat"></i></a>
-            <a href="https://www.threads.net/@selfmujahid" class="threads"><i class="fab fa-threads"></i></a>
-            <a href="https://www.instagram.com/selfmujahid?igsh=MWhvM2JwMDl3aGk2aQ==" class="instagram"><i class="fab fa-instagram"></i></a>
-            <a href="https://t.me/+MCgAcQ3MW_U5Yzg0" class="telegram"><i class="fab fa-telegram"></i></a>
-        </div>
-    </footer>
-    <script>
-        document.querySelector('.search-button').addEventListener('click', function() {
-            var button = this;
-            button.style.backgroundColor = '#fff';
-            button.style.borderColor = 'greenyellow';
-            button.style.color = 'black';
-            button.style.boxShadow = '0 0 50px greenyellow';
-            setTimeout(function() {
-                button.style.backgroundColor = '#FFA500';
-                button.style.borderColor = '#FFA500';
-                button.style.color = '#fff';
-                button.style.boxShadow = 'none';
-            }, 3000);
-        });
-    </script>
+      </div>
+    </a>`;
+  }).join('');
+  document.getElementById('marketContainer').innerHTML = `<div class="market-list">${html}</div>`;
+}
+
+function fmt(n) {
+  if (n >= 1000) return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  if (n >= 1)    return n.toFixed(4);
+  return n.toFixed(6);
+}
+
+// Init
+renderPortfolioChart();
+fetchPrices();
+// Refresh every 30 seconds
+setInterval(fetchPrices, 30000);
+</script>
 </body>
-  </html>
+</html>
