@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Real-Time Data - Welcome to Real-Time BTC Data</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #F0F0F0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            width: 100%;
+            background-color: #f0f0f0;
+            padding: 20px 0;
+            height: 100px;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        nav ul li {
+            margin: 0 10px;
+            position: relative;
+        }
+
+        nav ul li a {
+            color: #000000;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 10px 20px;
+            border: 0.1px solid #0AFFFF;
+            border-radius: 200px;
+            position: relative;
+            overflow: hidden;
+            transition: color 0.3s, border-color 0.3s, box-shadow 0.3s, text-shadow 0.3s, background-color 0.3s, border-width 0.3s;
+            background-color: #F7FFFF;
+            box-shadow: 0 0 5px rgba(250, 42, 85, 0.5);
+        }
+
+        nav ul li a::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 255, 255, 0.8), transparent 70%);
+            border-radius: 50%;
+            animation: neonGlow 1.5s linear infinite alternate;
+            z-index: -1;
+            opacity: 0;
+        }
+
+        nav ul li a:hover::before {
+            opacity: 1;
+        }
+
+        nav ul li a:hover {
+            color: #fff;
+            border-color: #14A3C7;
+            box-shadow: 0 0 10px rgba(20, 163, 199, 0.5);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        nav ul li a:active,
+        nav ul li a:focus {
+            color: #333;
+            background-color: #fff;
+            border-color: #14A3C7;
+            border-width: 2px;
+            box-shadow: 0 0 200px rgba(20, 163, 199, 1), 0 0 50px rgba(20, 163, 199, 1);
+        }
+
+        @keyframes neonGlow {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        .top-left-logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .logo-with-border {
+            font-size: 40px;
+            color: #f7931a;
+            margin-right: 10px;
+        }
+
+        .cube {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            transform-style: preserve-3d;
+            transform: rotateX(-30deg) rotateY(-45deg);
+            animation: rotate 10s infinite linear;
+            background-color: #fff;
+            margin-top: 20px;
+        }
+
+        .face {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            border: 0.5px solid #000000; /* Added border to each face */
+        }
+
+        .cube-logo {
+            font-size: 130px;
+            color: #342D7E;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            padding: 7px;
+        }
+
+        .face.front  { transform: translateZ(100px); }
+        .face.back   { transform: rotateY(180deg) translateZ(100px); }
+        .face.right  { transform: rotateY(90deg) translateZ(100px); }
+        .face.left   { transform: rotateY(-90deg) translateZ(100px); }
+        .face.top    { transform: rotateX(90deg) translateZ(100px); }
+        .face.bottom { transform: rotateX(-90deg) translateZ(100px); }
+
+        @keyframes rotate {
+            from { transform: rotateX(-30deg) rotateY(-45deg); }
+            to { transform: rotateX(-30deg) rotateY(315deg); }
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .welcome-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%; /* Ensure the container takes full width */
+            position: relative; /* Set the position to relative */
+        }
+
+        .btc-text {
+            text-align: center; /* Center the title */
+            font-size: 25px;
+            font-weight: bold;
+            width: auto; /* Ensure the text takes full width */
+            position: absolute; /* Use absolute positioning */
+            top: -865px; /* Adjust this value to move the text up or down */
+            left: 0; /* Move the text to the left */
+            transform: translateX(-20%); /* Center the text horizontally */
+        }
+
+        .welcome-text {
+            text-align: left; /* Align the text to the left */
+            font-size: 16px;
+            line-height: 1.8;
+            width: 100%; /* Ensure the text takes full width */
+            max-width: 270px; /* Set a maximum width to limit the text width */
+            margin: 0 auto; /* Center the text within the container */
+            position: absolute; /* Use absolute positioning */
+            top: -810px; /* Adjust this value to move the text up or down */
+            left: -40px; /* Adjust this value to move the text left or right */
+        }
+
+        .mujahid-image {
+            max-width: 150px; /* Adjust image size */
+            height: auto;
+            border-radius: 50%; /* Rounded corners */
+            position: absolute;
+            top: 130px; /* Adjust top position */
+            right: 50px; /* Adjust right position */
+        }
+
+        .search-container {
+            position: absolute; /* Changed to absolute for precise positioning */
+            top: 340px; /* Adjust this value to move the search bar up or down */
+            left: 50px; /* Adjust this value to move the search bar left or right */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }  
+
+        .search-container input[type="text"] {
+            font-size: 18px; /* Increase the font size */
+            color: #000; /* Set the text color to black */
+            padding: 8px 15px; /* Add padding */
+            border: 2px solid #ccc; /* Add a border */
+            border-radius: 5px 0 0 5px; /* Add rounded corners to the left side */
+            outline: none;
+            width: 350px; /* Set the width of the input field */
+            margin-right: -5px; /* Adjust the margin to control spacing between the input and button */
+        }
+
+        .search-container input:focus {
+            border-color: orange; /* Change border color on focus */
+            box-shadow: 0 0 100px rgba(255, 165, 0, 0.5); /* Add orange shadow on focus */
+        }
+
+        .search-container input::placeholder {
+            color: lightgray; /* Set the placeholder text color */
+            font-size: 20px; /* Increase the placeholder font size */
+        }
+
+        .search-container .search-button {
+            font-size: 18px; /* Increase the font size */
+            color: #fff;
+            background-color: #FFA500; /* Set the background color */
+            border: 2px solid #FFA500; /* Set the border */
+            padding: 8px 15px; /* Add padding */
+            border-radius: 0 5px 5px 0;/* Add rounded corners to the right side */
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s; /* Added transition for smooth effect */
+        }
+
+        .search-container .search-button:active {
+            background-color: #fff; /* Change background color on click */
+            border-color: greenyellow; /* Change border color on click */
+            color: black; /* Change text color on click */
+            box-shadow: 0 0 50px greenyellow; /* Add greenyellow shadow on click */
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .image-container img {
+            max-width: 35%;
+            height: auto;
+            border: 2px solid #a14a3c7;
+            border-radius: 200px;
+            box-shadow: 0 0 50px rgba(20, 163, 199, 1);
+        }
+
+        footer {
+            background-color: #F0F0F0;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            width: 100%;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .social-icons a {
+            color: white;
+            text-decoration: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .social-icons a.x {
+            background-color: #000000;
+        }
+
+        .social-icons a.instagram {
+            background-color: #e4405f;
+        }
+        
+        .social-icons a.youtube {
+            background-color: #FF0030;
+        }
+
+        .social-icons a.whatsapp {
+            background-color: #2BD315;
+        }
+
+        .social-icons a.snapchat {
+            background-color: #FFED00;
+            color: #000; /* Set the icon color to black */
+        }
+
+        .social-icons a.threads {
+    background-color: #000000;
+    position: relative;
+}
+.social-icons a.threads::before {
+    content: '@';
+    color: white;
+    font-size: 21.4px; /* Adjust the font size as needed */
+    position: absolute;
+    top: 46%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.social-icons a.telegram {
+            background-color: #00C2FF;
+        }
+
+        .social-icons a:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="top-left-logo">
+            <span class="fab fa-bitcoin logo-with-border"></span>
+            <span>Self Mujahid</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Real-Time BTC Data</a></li>
+                <li><a href="#">Chart</a></li>
+                <li><a href="#">Analyse</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="welcome-container">
+            <h1 class="btc-text">BTC Real-Time Data</h1>
+            <p class="welcome-text">Welcome to the real-time BTC data dashboard. Here you can view the latest Bitcoin trends, market analysis, and more.</p>
+        </div>
+        <div class="image-container">
+            <img class="mujahid-image" src="https://www.dropbox.com/scl/fi/cuqcpx0j01krwytnnzymn/20240628_090111-removebg-preview.png?rlkey=pq4yr623hr742r81hit5ldj27&dl=1" alt="Mujahid Tasveer">
+        </div>
+        <div class="search-container">
+            <input type="text" placeholder="Search BTC data...">
+            <button class="search-button">Search</button>
+        </div>
+        <div class="cube">
+            <div class="face front"><i class="cube-logo fab fa-bitcoin"></i></div>
+            <div class="face back"><i class="cube-logo fab fa-bitcoin"></i></div>
+            <div class="face right"><i class="cube-logo fab fa-bitcoin"></i></div>
+            <div class="face left"><i class="cube-logo fab fa-bitcoin"></i></div>
+            <div class="face top"><i class="cube-logo fab fa-bitcoin"></i></div>
+            <div class="face bottom"><i class="cube-logo fab fa-bitcoin"></i></div>
+        </div>
+    </main>
+    <footer>
+        <div class="social-icons">
+            <a href="https://x.com/SelfMujahid?t=7F0NPcPgOu0Y44Mci4M_qA&s=09" class="x"><i class="fab fa-x"></i></a>
+            <a href="https://youtube.com/@selfmujahid?si=4nbeFdlCDSwBvVIX" class="youtube"><i class="fab fa-youtube"></i></a>
+            <a href="https://whatsapp.com/channel/0029Va9QorTBKfiAiPzPFi2o" class="whatsapp"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://www.snapchat.com/add/selfmujahid?share_id=LpEs56l2VFo&locale=en-PK" class="snapchat"><i class="fab fa-snapchat"></i></a>
+            <a href="https://www.threads.net/@selfmujahid" class="threads"><i class="fab fa-threads"></i></a>
+            <a href="https://www.instagram.com/selfmujahid?igsh=MWhvM2JwMDl3aGk2aQ==" class="instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://t.me/+MCgAcQ3MW_U5Yzg0" class="telegram"><i class="fab fa-telegram"></i></a>
+        </div>
+    </footer>
+    <script>
+        document.querySelector('.search-button').addEventListener('click', function() {
+            var button = this;
+            button.style.backgroundColor = '#fff';
+            button.style.borderColor = 'greenyellow';
+            button.style.color = 'black';
+            button.style.boxShadow = '0 0 50px greenyellow';
+            setTimeout(function() {
+                button.style.backgroundColor = '#FFA500';
+                button.style.borderColor = '#FFA500';
+                button.style.color = '#fff';
+                button.style.boxShadow = 'none';
+            }, 3000);
+        });
+    </script>
+</body>
+  </html>
