@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Live Crypto Prices</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --bg:#f5f5f5;
+  --card:#ffffff;
+  --border:#dddddd;
+  --text:#111111;
+  --muted:#666666;
+  --accent:#00d4ff;
+  --green:#00e676;
+  --red:#ff1744;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  padding:20px;
+}
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+
+.logo{
+  font-family:'Syne',sans-serif;
+  font-size:22px;
+  font-weight:700;
+}
+
+.logo span{
+  color:var(--accent);
+}
+
+.back-btn{
+  text-decoration:none;
+  color:var(--accent);
+  font-weight:600;
+}
+
+.page-title{
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:16px;
+}
+
+.market-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.market-row{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.market-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.coin-logo{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  overflow:hidden;
+  background:#111;
+  flex-shrink:0;
+}
+
+.coin-logo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.coin-name{
+  font-size:14px;
+  font-weight:600;
+}
+
+.coin-symbol{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.market-right{
+  text-align:right;
+}
+
+.coin-price{
+  font-size:14px;
+  font-weight:700;
+}
+
+.coin-change{
+  font-size:12px;
+  font-weight:600;
+  margin-top:3px;
+}
+
+.loading{
+  text-align:center;
+  padding:40px;
+  color:var(--muted);
+}
+
+.spinner{
+  width:30px;
+  height:30px;
+  border:3px solid #ddd;
+  border-top-color:var(--accent);
+  border-radius:50%;
+  margin:0 auto 10px;
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">TEST<span>EXCHANGE</span></div>
+  <a href="index.html" class="back-btn">← Home</a>
+</header>
+
+<div class="page-title">
+  Live Crypto Prices
+</div>
+
+<div id="marketContainer">
+
+  <div class="loading">
+    <div class="spinner"></div>
+    Loading prices...
+  </div>
+
+</div>
+
+<script>
+
+async function loadCoins(){
+
+  try{
+
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h'
+    );
+
+    const data = await res.json();
+
+    renderCoins(data);
+
+  }catch(e){
+
+    document.getElementById('marketContainer').innerHTML =
+      '<div class="loading">Failed to load prices</div>';
+
+  }
+
+}
+
+function renderCoins(data){
+
+  const html = data.map(c=>{
+
+    const up = c.price_change_percentage_24h >= 0;
+
+    return `
+
+    <div class="market-row">
+
+      <div class="market-left">
+
+        <div class="coin-logo">
+          <img src="${c.image}">
+        </div>
+
+        <div>
+
+          <div class="coin-name">
+            ${c.name}
+          </div>
+
+          <div class="coin-symbol">
+            ${c.symbol.toUpperCase()}/USDT
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="market-right">
+
+        <div class="coin-price">
+          $${formatPrice(c.current_price)}
+        </div>
+
+        <div class="coin-change"
+             style="color:${up ? 'var(--green)' : 'var(--red)'}">
+
+          ${up ? '▲' : '▼'}
+          ${Math.abs(c.price_change_percentage_24h).toFixed(2)}%
+
+        </div>
+
+      </div>
+
+    </div>
+
+    `;
+
+  }).join('');
+
+  document.getElementById('marketContainer').innerHTML =
+    `<div class="market-list">${html}</div>`;
+
+}
+
+function formatPrice(n){
+
+  if(n >= 1000){
+    return n.toLocaleString('en-US',{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    });
+  }
+
+  if(n >= 1){
+    return n.toFixed(4);
+  }
+
+  return n.toFixed(6);
+
+}
+
+loadCoins();
+
+setInterval(loadCoins,30000);
+
+</script>
+
+</body>
+</html>
