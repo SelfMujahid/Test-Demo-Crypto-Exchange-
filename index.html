@@ -420,37 +420,75 @@ function renderPortfolioChart() {
   `;
 }
 
-// CoinGecko free API — real prices
-const COINS = [
-  { id: 'bitcoin',      name: 'Bitcoin',    sym: 'BTC',  icon: '₿', color: '#f7931a' },
-  { id: 'ethereum',     name: 'Ethereum',   sym: 'ETH',  icon: 'Ξ', color: '#627eea' },
-  { id: 'solana',       name: 'Solana',     sym: 'SOL',  icon: '◎', color: '#9945ff' },
-  { id: 'binancecoin',  name: 'BNB',        sym: 'BNB',  icon: 'B', color: '#f3ba2f' },
-  { id: 'ripple',       name: 'XRP',        sym: 'XRP',  icon: '✕', color: '#00aae4' },
-  { id: 'dogecoin',     name: 'Dogecoin',   sym: 'DOGE', icon: 'Ð', color: '#c3a634' },
-  { id: 'cardano',      name: 'Cardano',    sym: 'ADA',  icon: '₳', color: '#0033ad' },
-  { id: 'tron',         name: 'TRON',       sym: 'TRX',  icon: 'T', color: '#ff0013' },
-];
+// CoinGecko free API — real price
+let COINS = [];
 
-let priceData = {};
-
-async function fetchPrices() {
-  const ids = COINS.map(c => c.id).join(',');
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+async function loadAllCoins() {
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('API error');
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h'
+    );
+
     const data = await res.json();
-    priceData = data;
-    renderMarkets(data);
-    document.getElementById('liveDot').style.background = '#00e676';
+
+    COINS = data.map(c => ({
+      id: c.id,
+      name: c.name,
+      sym: c.symbol.toUpperCase(),
+      icon: c.symbol.charAt(0).toUpperCase(),
+      color: '#00d4ff'
+    }));
+
+    renderMarketsFromAPI(data);
+
   } catch (e) {
     document.getElementById('marketContainer').innerHTML = `
       <div class="api-error">
-        ⚠️ Live prices load nahi hui. Internet check karein ya thodi der mein refresh karein.
+        ⚠️ Coins load nahi huay.
       </div>`;
-    document.getElementById('liveDot').style.background = '#ff1744';
   }
+}
+let priceData = {};
+
+function renderMarketsFromAPI(data) {
+
+  const html = data.map(c => {
+
+    const price = c.current_price;
+    const change = c.price_change_percentage_24h || 0;
+    const up = change >= 0;
+
+    return `
+    <a href="prices.html" class="market-row">
+      <div class="mr-left">
+        <div class="coin-icon"
+             style="background:#00d4ff22;color:#00d4ff">
+          ${c.symbol.charAt(0).toUpperCase()}
+        </div>
+
+        <div>
+          <div class="mr-name">${c.name}</div>
+          <div class="mr-sym">${c.symbol.toUpperCase()}/USDT</div>
+        </div>
+      </div>
+
+      <div class="mr-right">
+        <div class="mr-price">$${fmt(price)}</div>
+
+        <div class="mr-change"
+             style="color:${up ? 'var(--green)' : 'var(--red)'}">
+
+          ${up ? '▲' : '▼'}
+          ${Math.abs(change).toFixed(2)}%
+
+        </div>
+      </div>
+    </a>
+    `;
+  }).join('');
+
+  document.getElementById('marketContainer').innerHTML =
+    `<div class="market-list">${html}</div>`;
 }
 
 function renderMarkets(data) {
@@ -488,9 +526,8 @@ function fmt(n) {
 
 // Init
 renderPortfolioChart();
-fetchPrices();
-// Refresh every 30 seconds
-setInterval(fetchPrices, 30000);
+loadAllCoins();
+setInterval(loadAllCoins, 10000);
 </script>
 </body>
 </html>
