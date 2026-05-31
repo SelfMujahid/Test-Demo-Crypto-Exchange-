@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Crypto Rain Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none; /* Safari mobile ke liye */
+            touch-action: none; /* Mobile par swipe block karne ke liye taqe drag sahi chale */
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* Top Dashboard Header Layout */
+        .dashboard-header {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            z-index: 100;
+            border: 1px solid #eaeaea;
+            display: flex;
+            gap: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+            justify-content: space-between;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #848e9c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e2022;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btc-logo {
+            background-color: #f7931a;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* --- NEW SIZE & COLORS (50% Smaller & Shola Framework) --- */
+        
+        .element-node {
+            position: absolute;
+            top: 135px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        /* Base Shola/Drop Teardrop structure */
+        .shola-base {
+            border-radius: 50% 50% 20% 20% / 80% 80% 40% 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 1. Red Fire Shola (> 50 BTC) */
+        .red-shola {
+            width: 55px; /* Size 50% chota kiya gaya hai */
+            height: 55px;
+            background: linear-gradient(0deg, #dc2626 0%, #f97316 50%, #facc15 100%);
+            border: 1px solid #ef4444;
+            box-shadow: 0 -5px 15px rgba(239, 68, 68, 0.5);
+            animation: flicker 0.15s ease-in-out infinite alternate;
+        }
+
+        /* 2. Yellow Fire Shola (10 - 50 BTC) */
+        .yellow-shola {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(0deg, #ea580c 0%, #eab308 60%, #fef08a 100%);
+            border: 1px solid #ca8a04;
+            box-shadow: 0 -4px 12px rgba(234, 88, 12, 0.4);
+            animation: flicker 0.18s ease-in-out infinite alternate;
+        }
+
+        /* 3. Blue Fire Shola (1 - 10 BTC) */
+        .blue-shola {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(0deg, #1d4ed8 0%, #3b82f6 50%, #93c5fd 100%);
+            border: 1px solid #2563eb;
+            box-shadow: 0 -4px 10px rgba(37, 99, 235, 0.4);
+            animation: flicker 0.2s ease-in-out infinite alternate;
+        }
+
+        /* 4. Water Drop (< 1 BTC) */
+        .water-drop {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+            border: 1px solid #7dd3fc;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            /* Standard water drop shape */
+            border-radius: 0% 100% 50% 50% / 0% 50% 50% 100%;
+            transform: rotate(45deg);
+        }
+
+        @keyframes flicker {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
+        }
+
+        /* Inner Content adjustments for smaller sizes */
+        .inner-text {
+            position: absolute;
+            z-index: 2;
+            pointer-events: none;
+            font-size: 8px; /* Size 9px se 8px kiya taqe drop mein fit aaye */
+            color: #ffffff;
+            line-height: 1.0; /* Line spacing mazeed kam kar di */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .water-drop-text {
+            color: #0369a1; /* Sirf text blue hoga, logo orange hi rahega */
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .sub-val {
+            font-size: 7.5px;
+            opacity: 0.85;
+            font-weight: normal;
+        }
+
+        /* Animation System */
+        @keyframes fall-animation {
+            0% { opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { top: 105vh; opacity: 0; }
+        }
+
+        .copy-toast {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2022;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 200;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .drop-btc-logo-top {
+            background-color: #f7931a;
+            color: white !important;
+            border-radius: 50%;
+            width: 10px; /* Size 12px se chota karke 10px kar diya */
+            height: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px; /* Symbol bhi thoda chota kiya */
+            font-weight: bold;
+            margin-top: -13px; /* CRITICAL: Is minus margin se logo thoda upar shift ho jayega */
+            margin-bottom: 1px; /* Neeche amount se fasla kam kiya */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+
+        <div class="dashboard-header" style="flex-direction: column; gap: 12px; max-width: 650px;">
+        
+        <div style="display: flex; width: 100%; justify-content: space-between; gap: 10px; border-bottom: 1px solid #eaeaea; padding-bottom: 8px;">
+            <div class="stat-box">
+                <div class="stat-label">BTC Price</div>
+                <div class="stat-value"><span class="btc-logo">₿</span> <span id="btc-price-display">Fetching...</span></div>
+            </div>
+            <div class="stat-box" style="border-left: 1px solid #eaeaea; padding-left: 10px;">
+                <div class="stat-label">⏱️ Open Time</div>
+                <div class="stat-value" id="timer-display">00:00</div>
+            </div>
+            <div class="stat-box" style="border-left: 1px solid #eaeaea; padding-left: 10px;">
+                <div class="stat-label">🌧️ Total Rained</div>
+                <div class="stat-value" id="total-btc-display">0.00 BTC</div>
+                <div class="stat-label" id="total-usd-display" style="margin-top:2px; text-transform:none; font-weight:600; color:#03a66d; font-size:10px;">$0</div>
+            </div>
+        </div>
+
+        <div style="display: flex; width: 100%; justify-content: space-between; gap: 5px; text-align: center;">
+            <div style="flex: 1;">
+                <div style="font-size: 10px; font-weight: bold; color: #dc2626;">🔥 Red (>50)</div>
+                <div id="count-red" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
+                <div id="btc-red" style="font-size: 9px; color: #666;">0.00 ₿</div>
+                <div id="usd-red" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+            </div>
+            <div style="flex: 1; border-left: 1px solid #eee;">
+                <div style="font-size: 10px; font-weight: bold; color: #ea580c;">⚡ Yellow (10-50)</div>
+                <div id="count-yellow" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
+                <div id="btc-yellow" style="font-size: 9px; color: #666;">0.00 ₿</div>
+                <div id="usd-yellow" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+            </div>
+            <div style="flex: 1; border-left: 1px solid #eee;">
+                <div style="font-size: 10px; font-weight: bold; color: #1d4ed8;">💧 Blue (1-10)</div>
+                <div id="count-blue" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
+                <div id="btc-blue" style="font-size: 9px; color: #666;">0.00 ₿</div>
+                <div id="usd-blue" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+            </div>
+            <div style="flex: 1; border-left: 1px solid #eee;">
+                <div style="font-size: 10px; font-weight: bold; color: #0369a1;">🌊 Water (<1)</div>
+                <div id="count-water" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
+                <div id="btc-water" style="font-size: 9px; color: #666;">0.00 ₿</div>
+                <div id="usd-water" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="copy-toast" id="copy-alert">TXID Copied! 👍</div>
+
+<script>
+        let btcPriceInUSD = 74000;
+    let pageTotalBTC = 0;
+    let startTime = Date.now();
+
+    // Color-wise analytics storage objects
+    const stats = {
+        red:    { count: 0, btc: 0 },
+        yellow: { count: 0, btc: 0 },
+        blue:   { count: 0, btc: 0 },
+        water:  { count: 0, btc: 0 }
+    };
+
+    // Timer logic
+    setInterval(() => {
+        let elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        let mins = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+        let secs = (elapsedSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+    }, 1000);
+
+        function updateBTCPrice() {
+        fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+            .then(res => res.json())
+            .then(data => {
+                btcPriceInUSD = parseFloat(data.price);
+                document.getElementById('btc-price-display').innerHTML = `$${btcPriceInUSD.toLocaleString()}`;
+                let sessionUSD = pageTotalBTC * btcPriceInUSD;
+                document.getElementById('total-usd-display').innerText = `$${sessionUSD.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+                
+                // Live price change hone par categories ka USD bhi recalculate karein
+                ['red', 'yellow', 'blue', 'water'].forEach(cat => {
+                    let catUSD = stats[cat].btc * btcPriceInUSD;
+                    const el = document.getElementById(`usd-${cat}`);
+                    if(el) {
+                        el.innerText = catUSD >= 1000 ? "$" + (catUSD / 1000).toFixed(1) + "k" : "$" + catUSD.toFixed(0);
+                    }
+                });
+            }).catch(err => console.log(err));
+    }
+
+    setInterval(updateBTCPrice, 10000);
+    updateBTCPrice();
+
+    // WSS Network Connection
+    const ws = new WebSocket("wss://ws.blockchain.info/inv");
+    ws.onopen = () => { ws.send(JSON.stringify({ "op": "unconfirmed_sub" })); };
+
+    ws.onmessage = (event) => {
+        const response = JSON.parse(event.data);
+        if (response.op === "utx") {
+            const txData = response.x;
+            const txHash = txData.hash;
+            
+            let totalOut = 0;
+            txData.out.forEach(output => { totalOut += output.value; });
+            const rawBtc = totalOut / 100000000;
+
+            if (rawBtc > 0.001) {
+                pageTotalBTC += rawBtc;
+                document.getElementById('total-btc-display').innerText = `${pageTotalBTC.toFixed(2)} BTC`;
+                let sessionUSD = pageTotalBTC * btcPriceInUSD;
+                document.getElementById('total-usd-display').innerText = `$${sessionUSD.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+                
+                createCryptoNode(rawBtc, txHash);
+            }
+        }
+    };
+
+    function createCryptoNode(btcAmount, txHash) {
+    const container = document.createElement('div');
+    container.className = 'element-node';
+    container.style.top = '135px'; // Nayi boond ko pehle hi 75px par set kar diya
+    
+        const shapeDiv = document.createElement('div');
+        const textDiv = document.createElement('div');
+        textDiv.className = 'inner-text';
+
+        const formattedBTC = btcAmount.toFixed(2);
+        const usdAmount = btcAmount * btcPriceInUSD;
+        let formattedUSD = usdAmount >= 1000 ? "$" + (usdAmount / 1000).toFixed(1) + "k" : "$" + usdAmount.toFixed(0);
+
+        textDiv.innerHTML = `
+    <div class="drop-btc-logo-top">₿</div>
+    <div>${formattedBTC}</div>
+    <div class="sub-val">${formattedUSD}</div>
+`;
+               // --- ADVANCED RANGE & COUNTER LOGIC ---
+        let category = 'water';
+
+        if (btcAmount >= 50) {
+            shapeDiv.className = 'shola-base red-shola';
+            category = 'red';
+        } else if (btcAmount >= 10 && btcAmount < 50) {
+            shapeDiv.className = 'shola-base yellow-shola';
+            category = 'yellow';
+        } else if (btcAmount >= 1 && btcAmount < 10) {
+            shapeDiv.className = 'shola-base blue-shola';
+            category = 'blue';
+        } else {
+            shapeDiv.className = 'water-drop';
+            textDiv.classList.add('water-drop-text');
+            category = 'water';
+        }
+
+        // 1. Memory arrays mein calculations update karein
+        stats[category].count += 1;
+        stats[category].btc += btcAmount;
+
+        // 2. Interface ke specific indicators ko real-time update karein
+        document.getElementById(`count-${category}`).innerText = stats[category].count;
+        document.getElementById(`btc-${category}`).innerText = stats[category].btc.toFixed(2) + " ₿";
+        
+        let catUSD = stats[category].btc * btcPriceInUSD;
+        document.getElementById(`usd-${category}`).innerText = catUSD >= 1000 
+            ? "$" + (catUSD / 1000).toFixed(1) + "k" 
+            : "$" + catUSD.toFixed(0);
+
+container.appendChild(shapeDiv);
+container.appendChild(textDiv);
+
+        const randomLeft = Math.random() * (window.innerWidth - 60); 
+        container.style.left = randomLeft + 'px';
+
+                // 1. Random speed tay ki (Aapki 50% slow speed barqarar hai)
+        const fallDuration = Math.random() * 8 + 15; 
+        container.style.animation = `fall-animation ${fallDuration}s linear forwards`;
+
+        document.body.appendChild(container);
+
+        // 2. FIXED TIMER KHATAM! Ab jab tak animation sach mein end nahi hogi, drop delete nahi hoga
+        container.addEventListener('animationend', () => {
+            container.remove();
+        });
+
+        // --- MOBILE TOUCH DRAG & DROP + SMART CLICK SYSTEM ---
+        let isDragging = false;
+        let startX, startY;
+        let originalLeft, originalTop;
+
+        // Dono Mouse aur Touch events lga diye taqi universal kaam kare
+        const startAction = (e) => {
+            isDragging = false;
+            // Handle touch vs mouse coordinates
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            startX = clientX;
+            startY = clientY;
+            
+           const rect = container.getBoundingClientRect();
+           originalLeft = rect.left;
+           originalTop = rect.top || 75; // Agar animation start par ho tu 75px uthaye
+
+           container.style.animationPlayState = 'paused';
+
+                        const moveAction = (moveEvent) => {
+                const mX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                const mY = moveEvent.touches ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+                let deltaX = mX - startX;
+                let deltaY = mY - startY;
+
+                if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+                    isDragging = true; 
+                    container.style.animation = 'none'; // Upar-neeche free movement kholne ke liye animation band ki
+                }
+
+                container.style.left = (originalLeft + deltaX) + 'px';
+                container.style.top = (originalTop + deltaY) + 'px';
+            };
+
+            const endAction = () => {
+                window.removeEventListener('mousemove', moveAction);
+                window.removeEventListener('touchmove', moveAction);
+                window.removeEventListener('mouseup', endAction);
+                window.removeEventListener('touchend', endAction);
+
+                if (!isDragging) {
+                    navigator.clipboard.writeText(txHash).then(() => {
+                        const alertBox = document.getElementById('copy-alert');
+                        alertBox.style.display = 'block';
+                        setTimeout(() => { alertBox.style.display = 'none'; }, 1500);
+                    }).catch(err => {
+                        const el = document.createElement('textarea');
+                        el.value = txHash;
+                        document.body.appendChild(el);
+                        el.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(el);
+                        const alertBox = document.getElementById('copy-alert');
+                        alertBox.style.display = 'block';
+                        setTimeout(() => { alertBox.style.display = 'none'; }, 1500);
+                    });
+                    container.style.animationPlayState = 'running';
+                } else {
+                    // 1. Touch chorte hi boond ko hawa mein rok dein
+                    container.style.animation = 'none'; 
+
+                    // 2. 3 Second ka wait timer shuru
+                    setTimeout(() => {
+                        if (container.parentElement) { 
+                            const currentTop = parseFloat(container.style.top) || 75;
+                            const remainingDistance = window.innerHeight - currentTop;
+                            const remainingTime = (remainingDistance / window.innerHeight) * fallDuration;
+
+                            const uniqueAnimName = `fall-from-${Math.floor(currentTop)}`;
+                            
+                            const styleSheet = document.styleSheets[0];
+                            try {
+                                styleSheet.insertRule(`
+                                    @keyframes ${uniqueAnimName} {
+                                        0% { top: ${currentTop}px; }
+                                        100% { top: 105vh; opacity: 0; }
+                                    }
+                                `, styleSheet.cssRules.length);
+                            } catch(e) {}
+
+                            container.style.animation = `${uniqueAnimName} ${remainingTime > 0 ? remainingTime : 4}s linear forwards`;
+
+                            // CRITICAL ADDITION: Drag ke baad jab naye rastay se animation khatam ho, tab delete ho
+                            container.addEventListener('animationend', () => {
+                                container.remove();
+                            });
+                        }
+                    }, 3000);
+                }
+            };
+
+            window.addEventListener('mousemove', moveAction);
+            window.addEventListener('touchmove', moveAction, { passive: false });
+            window.addEventListener('mouseup', endAction);
+            window.addEventListener('touchend', endAction);
+        };
+
+        container.addEventListener('mousedown', startAction);
+        container.addEventListener('touchstart', startAction, { passive: true });
+    }
+</script>
+
+</body>
+</html>
