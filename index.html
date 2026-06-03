@@ -3,20 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NexTrade — Demo Exchange</title>
+<title>TestTrade — Home</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f5f5f5;
-    --surface: #0a1929;
-    --card: #0d2137;
-    --border: #0e3254;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: #e0e0e0;
     --accent: #00d4ff;
     --green: #00e676;
     --red: #ff1744;
     --yellow: #ffd740;
-    --text: #e0f0ff;
-    --muted: #4a7a9b;
+    --text: #111111;
+    --muted: #777777;
+    --font-head: "Syne", sans-serif;
+    --font-body: "Inter", sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; }
+  .logo { font-family:var(--font-head); font-size:18px; font-weight:700; color:#111; text-decoration:none; }
+  .logo span { color:var(--accent); }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .demo-tag { background:rgba(255,215,64,0.15); color:var(--yellow); font-size:10px; font-weight:600; letter-spacing:1.5px; padding:4px 10px; border-radius:20px; border:1px solid rgba(255,215,64,0.3); }
+  .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,0.4)} 50%{box-shadow:0 0 0 5px rgba(0,230,118,0)} }
+
+  .menu-bar { display:flex; align-items:center; gap:4px; padding:0 16px 10px; overflow-x:auto; scrollbar-width:none; }
+  .menu-bar::-webkit-scrollbar { display:none; }
+  .menu-btn { display:flex; align-items:center; gap:5px; padding:7px 14px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; text-decoration:none; transition:all 0.2s; font-family:var(--font-body); }
+  .menu-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .menu-btn.active { background:rgba(0,212,255,0.08); border-color:var(--accent); color:var(--accent); }
+
+  /* BALANCE SECTION */
+  .balance-wrap {
+    padding: 16px 16px 0;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .balance-card {
+    background: linear-gradient(135deg, #e8f4ff 0%, #f0faff 60%, #e8f4ff 100%);
+    border: 1px solid #cce8f4;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .bal-left {}
+  .balance-label { font-size:10px; font-weight:600; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+  .balance-amount { font-family:var(--font-head); font-size:32px; font-weight:700; color:#111; margin-bottom:3px; }
+  .balance-amount span { font-size:18px; color:var(--muted); font-weight:400; }
+  .balance-change { font-size:12px; font-weight:600; color:var(--muted); }
+  .balance-stats { display:flex; gap:12px; }
+  .bstat { background:rgba(255,255,255,0.7); border:1px solid var(--border); border-radius:10px; padding:10px 16px; text-align:center; min-width:80px; }
+  .bstat-label { font-size:9px; color:var(--muted); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:3px; }
+  .bstat-value { font-family:var(--font-head); font-size:13px; font-weight:600; }
+  .g { color:var(--green); }
+  .y { color:#f5a623; }
+  .r { color:var(--red); }
+
+  /* ACTIVE TRADES */
+  .section-wrap { padding:0 16px 16px; max-width:900px; margin:0 auto; }
+  .section-title { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+  .section-title a { font-size:11px; color:var(--accent); text-decoration:none; }
+  .no-trades { background:var(--card); border:1px dashed var(--border); border-radius:12px; padding:24px; text-align:center; }
+  .no-trades-icon { font-size:32px; margin-bottom:8px; }
+  .no-trades h3 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px; }
+  .no-trades p { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .start-btn { display:inline-block; padding:8px 20px; background:var(--accent); color:#000; font-size:12px; font-weight:600; border-radius:8px; text-decoration:none; transition:all 0.2s; }
+  .start-btn:hover { background:#33ddff; }
+
+  /* PRICES SECTION TITLE */
+  .prices-section-title {
+    font-size:11px; font-weight:600; letter-spacing:1px;
+    text-transform:uppercase; color:var(--muted);
+    padding:0 16px 8px;
+    max-width:900px; margin:0 auto;
+    display:flex; align-items:center; gap:6px;
+  }
+  .ldot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 1.5s infinite; display:inline-block; }
+
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+
+  :root {
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: #e0e0e0;
+    --accent: #00d4ff;
+    --green: #00e676;
+    --red: #ff1744;
+    --yellow: #ffd740;
+    --text: #111111;
+    --muted: #777777;
     --font-head: 'Syne', sans-serif;
     --font-body: 'Inter', sans-serif;
   }
@@ -25,549 +126,1078 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-body);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
     min-height: 100vh;
     overflow-x: hidden;
   }
   body::before {
     content: '';
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background:
-      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,212,255,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 50% at 90% 80%, rgba(255,107,53,0.05) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
-    background-size: 50px 50px;
-    pointer-events: none;
-    z-index: 0;
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,150,255,0.03) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
   }
 
-  /* TOP NAV */
+  /* HEADER */
   header {
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    background: rgba(5,13,20,0.97);
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(255,255,255,0.97);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
   }
   .top-bar {
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
     justify-content: space-between;
     padding: 14px 20px;
   }
-  .logo {
-    font-family: var(--font-head);
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: #fff;
-  }
+  .logo { font-family: var(--font-head); font-size: 18px; font-weight: 800; color: #111; letter-spacing: 1px; text-decoration: none; }
   .logo span { color: var(--accent); }
   .header-right { display: flex; align-items: center; gap: 10px; }
   .demo-tag {
-    background: rgba(255,215,64,0.15);
-    color: var(--yellow);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    padding: 4px 10px;
-    border-radius: 20px;
+    background: rgba(255,215,64,0.15); color: var(--yellow);
+    font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    padding: 4px 10px; border-radius: 20px;
     border: 1px solid rgba(255,215,64,0.3);
   }
-  .live-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 1.5s infinite;
+  .ws-status {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 600; color: var(--muted);
   }
+  .ws-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--yellow);
+    transition: background 0.3s;
+  }
+  .ws-dot.connected { background: var(--green); animation: pulse 1.5s infinite; }
+  .ws-dot.error { background: var(--red); }
   @keyframes pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(0,230,118,0.5); }
-    50% { box-shadow: 0 0 0 6px rgba(0,230,118,0); }
+    0%,100% { box-shadow: 0 0 0 0 rgba(0,230,118,0.4); }
+    50% { box-shadow: 0 0 0 5px rgba(0,230,118,0); }
   }
 
   /* MENU BAR */
   .menu-bar {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 0 16px 12px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 16px 12px; overflow-x: auto; scrollbar-width: none;
   }
   .menu-bar::-webkit-scrollbar { display: none; }
   .menu-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 10px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    text-decoration: none;
-    transition: all 0.2s;
-    font-family: var(--font-body);
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; text-decoration: none;
+    transition: all 0.2s; font-family: var(--font-body);
   }
   .menu-btn:hover { border-color: var(--accent); color: var(--accent); }
   .menu-btn.active { background: rgba(0,212,255,0.12); border-color: var(--accent); color: var(--accent); }
-  .menu-btn span { font-size: 15px; }
 
-  /* MAIN */
-  main {
+  /* SEARCH + FILTER */
+  .controls {
+    position: relative; z-index: 1;
+    padding: 16px 16px 0;
+    max-width: 900px; margin: 0 auto;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .search-wrap {
+    flex: 1; min-width: 180px;
     position: relative;
-    z-index: 1;
-    padding: 20px 16px;
-    max-width: 520px;
-    margin: 0 auto;
   }
+  .search-input {
+    width: 100%; padding: 10px 16px 10px 38px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: var(--font-body); font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); font-size: 14px; color: var(--muted);
+  }
+  .filter-tabs {
+    display: flex; gap: 4px; align-items: center;
+  }
+  .filter-btn {
+    padding: 8px 14px; border-radius: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--muted); font-size: 11px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    font-family: var(--font-body); transition: all 0.2s;
+  }
+  .filter-btn.active { background: rgba(0,212,255,0.12); border-color: var(--accent); color: var(--accent); }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* BALANCE CARD */
-  .balance-card {
-    background: linear-gradient(135deg, #0d2137 0%, #0a3355 60%, #0d2137 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
-    animation: fadeUp 0.4s ease both;
-  }
-  .balance-card::before {
-    content: '';
-    position: absolute;
-    top: -60px; left: -40px;
-    width: 220px; height: 220px;
-    background: radial-gradient(circle, rgba(0,212,255,0.1), transparent 65%);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-  .balance-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .balance-amount {
-    font-family: var(--font-head);
-    font-size: 38px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-  .balance-amount span { font-size: 20px; color: var(--muted); font-weight: 400; }
-  .balance-change {
-    font-size: 13px;
-    color: var(--green);
-    font-weight: 600;
-    margin-bottom: 20px;
-  }
-  .balance-stats {
+  /* TABLE HEADER */
+  .table-header {
+    position: relative; z-index: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-  }
-  .bstat {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-  }
-  .bstat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-  .bstat-value { font-family: var(--font-head); font-size: 13px; font-weight: 600; }
-  .g { color: var(--green); }
-  .y { color: var(--yellow); }
-  .r { color: var(--red); }
-
-  /* SECTION TITLE */
-  .section-title {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .section-title a { font-size: 11px; color: var(--accent); text-decoration: none; }
-
-  /* NO TRADES */
-  .no-trades {
-    background: var(--card);
-    border: 1px dashed var(--border);
-    border-radius: 16px;
-    padding: 32px;
-    text-align: center;
-    margin-bottom: 24px;
-    animation: fadeUp 0.4s 0.15s ease both;
-  }
-  .no-trades-icon { font-size: 40px; margin-bottom: 10px; }
-  .no-trades h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-  .no-trades p { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
-  .start-btn {
-    display: inline-block;
-    padding: 10px 24px;
-    background: var(--accent);
-    color: #000;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 10px;
-    text-decoration: none;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-  }
-  .start-btn:hover { background: #33ddff; box-shadow: 0 4px 20px rgba(0,212,255,0.4); }
-
-  /* MARKET LIST */
-  .market-list {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: 40px 2fr 1.2fr 0.9fr 0.9fr 1fr 1.1fr;
     gap: 8px;
-    animation: fadeUp 0.4s 0.2s ease both;
+    padding: 14px 20px 8px;
+    max-width: 900px; margin: 0 auto;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border);
   }
-  .market-row {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px 16px;
-    display: flex;
+  .th-sortable { cursor: pointer; transition: color 0.2s; }
+  .th-sortable:hover { color: var(--accent); }
+  .th-right { text-align: right; }
+
+  /* COIN LIST */
+  .coin-list {
+    position: relative; z-index: 1;
+    max-width: 900px; margin: 0 auto;
+    padding: 0 0 20px;
+  }
+
+  .coin-row {
+    display: grid;
+    grid-template-columns: 40px 2fr 1.2fr 0.9fr 0.9fr 1fr 1.1fr;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(14,50,84,0.5);
     align-items: center;
-    justify-content: space-between;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.15s;
     text-decoration: none;
+    color: inherit;
   }
-  .market-row:hover { border-color: var(--accent); transform: translateX(3px); }
-  .mr-left { display: flex; align-items: center; gap: 12px; }
+  .coin-row:hover { background: rgba(0,212,255,0.04); }
+
+  .rank {
+    font-size: 11px; color: var(--muted);
+    font-weight: 600; text-align: center;
+  }
+
+  .coin-info { display: flex; align-items: center; gap: 10px; }
   .coin-logo {
-    width: 42px; height: 42px;
-    border-radius: 50%;
-    flex-shrink: 0;
+    width: 34px; height: 34px;
+    border-radius: 50%; flex-shrink: 0;
     object-fit: cover;
   }
-  .coin-icon {
-    width: 42px; height: 42px;
-    border-radius: 50%;
+  .coin-logo-placeholder {
+    width: 34px; height: 34px;
+    border-radius: 50%; flex-shrink: 0;
+    background: var(--border);
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    font-weight: 700;
-    flex-shrink: 0;
+    font-size: 12px; font-weight: 700; color: var(--muted);
   }
-  .mr-name { font-size: 14px; font-weight: 600; color: var(--text); }
-  .mr-sym { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .mr-right { text-align: right; }
-  .mr-price { font-family: var(--font-head); font-size: 14px; font-weight: 600; color: var(--text); }
-  .mr-change { font-size: 12px; font-weight: 600; margin-top: 2px; }
+  .coin-name-wrap {}
+  .coin-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .coin-sym { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+
+  .price-cell {
+    font-size: 13px; font-weight: 600;
+    color: var(--text); text-align: right;
+    transition: color 0.3s;
+  }
+  .price-cell.flash-up { color: var(--green); }
+  .price-cell.flash-down { color: var(--red); }
+
+  .change-cell {
+    font-size: 12px; font-weight: 700;
+    text-align: right; padding: 3px 8px;
+    border-radius: 6px; width: fit-content;
+    margin-left: auto;
+  }
+  .change-cell.up { background: rgba(0,230,118,0.12); color: var(--green); }
+  .change-cell.down { background: rgba(255,23,68,0.12); color: var(--red); }
+
+  .mcap-cell {
+    font-size: 11px; color: var(--muted);
+    text-align: right;
+  }
+  .vol-cell {
+    font-size: 11px; color: var(--muted);
+    text-align: right;
+  }
 
   /* LOADING */
   .loading {
-    text-align: center;
-    padding: 30px;
-    color: var(--muted);
-    font-size: 13px;
+    text-align: center; padding: 60px 20px;
+    color: var(--muted); font-size: 13px;
   }
   .spinner {
-    width: 28px; height: 28px;
-    border: 2px solid var(--border);
+    width: 32px; height: 32px;
+    border: 2px solid #e0e0e0;
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
-    margin: 0 auto 10px;
+    margin: 0 auto 12px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* PORTFOLIO CHART */
-  .portfolio-chart {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 24px;
-    animation: fadeUp 0.4s 0.1s ease both;
+  /* STATS BAR */
+  .stats-bar {
+    position: relative; z-index: 1;
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 12px 16px; max-width: 900px; margin: 0 auto;
   }
-  .pf-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .pf-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
-  .pf-value { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--green); }
-  svg.mini-chart { width: 100%; height: 60px; }
+  .stat-pill {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px;
+    font-size: 11px; color: var(--muted);
+  }
+  .stat-pill strong { color: var(--text); font-weight: 700; }
 
-  /* ERROR */
-  .api-error {
-    background: rgba(255,23,68,0.08);
-    border: 1px solid rgba(255,23,68,0.2);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: var(--red);
-    text-align: center;
-    margin-bottom: 12px;
+  /* MOBILE */
+  @media (max-width: 500px) {
+    .table-header { grid-template-columns: 30px 2fr 1.1fr 0.9fr 0.9fr; }
+    .table-header .th-mcap, .table-header .th-vol { display: none; }
+    .coin-row { grid-template-columns: 30px 2fr 1.1fr 0.9fr 0.9fr; }
+    .coin-row .mcap-cell, .coin-row .vol-cell { display: none; }
+    .coin-logo { width: 28px; height: 28px; }
+    .coin-logo-placeholder { width: 28px; height: 28px; }
   }
+
+  /* FEAR & GREED — CMC semicircle style */
+  .fng-wrap {
+    position: relative; z-index: 1;
+    max-width: 900px; margin: 0 auto 4px;
+    padding: 0 16px;
+  }
+  .fng-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .fng-title { font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .fng-svg { width: 56px; height: 32px; overflow: visible; }
+  .fng-label { font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .fng-sep { color: #ddd; font-size: 11px; }
+  .fng-history { font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .fng-history b { color: #333; }
+
+
+
 </style>
 </head>
 <body>
 
 <header>
   <div class="top-bar">
-    <div class="logo">NEX<span>TRADE</span></div>
+    <a href="index.html" class="logo">TEST<span>TRADE</span></a>
     <div class="header-right">
       <div class="demo-tag">⚡ DEMO</div>
-      <div class="live-dot" id="liveDot"></div>
+      <div class="live-dot" id="wsDot"></div>
+      <span id="wsLabel" style="font-size:10px;color:var(--muted)">Connecting...</span>
     </div>
   </div>
   <div class="menu-bar">
-    <a href="index.html" class="menu-btn active"><span>🏠</span> Home</a>
-    <a href="prices.html" class="menu-btn"><span>📊</span> Prices</a>
+    <a href="index.html" class="menu-btn active">🏠 Home</a>
+    <a href="spot.html" class="menu-btn">💱 Spot</a>
+    <a href="futures.html" class="menu-btn">🚀 Futures</a>
+    <a href="bot.html" class="menu-btn">🤖 Bot</a>
+    <a href="analytics.html" class="menu-btn">🔍 Analytics</a>
     <a href="#" class="menu-btn" onclick="toggleVisualMenu(event)">🎨 Visual ▾</a>
-<div id="visualMenu" style="display:none;position:absolute;background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:999;min-width:160px;">
-  <a href="drops.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;font-weight:500;border-bottom:1px solid #f0f0f0;">🌧️ Drops</a>
-  <a href="wallet.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;font-weight:500;border-bottom:1px solid #f0f0f0;">👛 Wallet Transactions</a>
-  <a href="bubbles.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;font-weight:500;">🫧 Bubbles</a>
-</div>
-    <a href="spot.html" class="menu-btn"><span>💱</span> Spot</a>
-    <a href="futures.html" class="menu-btn"><span>🚀</span> Futures</a>
-    <a href="analytics.html" class="menu-btn"><span>🔍</span> Analytics</a>
+    <div id="visualMenu" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:999;min-width:160px;">
+      <a href="drops.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">🌧️ Drops</a>
+      <a href="wallet.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">👛 Wallet Transactions</a>
+      <a href="bubbles.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;">🫧 Bubbles</a>
+    </div>
   </div>
 </header>
 
-<main>
-
-  <!-- BALANCE -->
+<!-- BALANCE -->
+<div class="balance-wrap">
   <div class="balance-card">
-    <div class="balance-label">Demo Portfolio Value</div>
-    <div class="balance-amount">$10,000<span>.00</span></div>
-    <div class="balance-change">Starting Balance — No trades open</div>
+    <div class="bal-left">
+      <div class="balance-label">Demo Portfolio</div>
+      <div class="balance-amount" id="homeBalance">$10,000<span>.00</span></div>
+      <div class="balance-change" id="homeChange">Starting Balance</div>
+    </div>
     <div class="balance-stats">
       <div class="bstat">
         <div class="bstat-label">Available</div>
-        <div class="bstat-value y">$10,000</div>
+        <div class="bstat-value y" id="availBal">$10,000</div>
       </div>
       <div class="bstat">
         <div class="bstat-label">In Trades</div>
         <div class="bstat-value r">$0.00</div>
       </div>
       <div class="bstat">
-        <div class="bstat-label">Total P&L</div>
-        <div class="bstat-value g">$0.00</div>
+        <div class="bstat-label">P&L</div>
+        <div class="bstat-value g" id="homePnl">$0.00</div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- PORTFOLIO CHART -->
-  <div class="portfolio-chart">
-    <div class="pf-header">
-      <div class="pf-title">Balance History</div>
-      <div class="pf-value">$10,000.00</div>
-    </div>
-    <svg class="mini-chart" id="portfolioChart" viewBox="0 0 400 60" preserveAspectRatio="none"></svg>
-  </div>
-
-  <!-- ACTIVE TRADES -->
+<!-- ACTIVE TRADES -->
+<div class="section-wrap">
   <div class="section-title">
     <span>Active Trades</span>
     <a href="futures.html">Open Trade →</a>
   </div>
-
   <div class="no-trades">
     <div class="no-trades-icon">📭</div>
     <h3>No Open Trades</h3>
-    <p>Aapne abhi koi trade nahi ki.<br>Spot ya Futures se shuru karein.</p>
+    <p>Futures ya Bot se trade kholo</p>
     <a href="futures.html" class="start-btn">Start Trading</a>
   </div>
+</div>
 
-  <!-- LIVE MARKETS -->
-  <div class="section-title">
-    <span>Live Market Prices</span>
-    <a href="prices.html">See All →</a>
+<!-- PRICES SECTION -->
+<div class="prices-section-title">
+  <span class="ldot"></span>
+  Live Market Prices
+</div>
+
+
+
+<!-- STATS BAR -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat-pill">Total Coins: <strong id="totalCoins">—</strong></div>
+  <div class="stat-pill">BTC: <strong id="btcPrice">—</strong></div>
+  <div class="stat-pill">Global MCap: <strong id="globalMcap">—</strong></div>
+
+<!-- FEAR & GREED CMC style -->
+<div class="fng-wrap">
+  <div class="fng-card">
+    <div class="fng-title">Fear &amp; Greed:</div>
+    <!-- SVG semicircle gauge -->
+    <svg class="fng-svg" viewBox="0 0 56 32">
+      <!-- Rainbow arc: 5 colored segments -->
+      <path d="M4,28 A24,24 0 0,1 14,7"   fill="none" stroke="#e53935" stroke-width="5" stroke-linecap="butt"/>
+      <path d="M14,7  A24,24 0 0,1 28,4"  fill="none" stroke="#ef6c00" stroke-width="5" stroke-linecap="butt"/>
+      <path d="M28,4  A24,24 0 0,1 42,7"  fill="none" stroke="#fdd835" stroke-width="5" stroke-linecap="butt"/>
+      <path d="M42,7  A24,24 0 0,1 52,28" fill="none" stroke="#7cb342" stroke-width="5" stroke-linecap="butt"/>
+      <!-- Needle -->
+      <line id="fngNeedle" x1="28" y1="28" x2="28" y2="6"
+        stroke="#111" stroke-width="2" stroke-linecap="round"
+        transform="rotate(-90,28,28)"/>
+      <circle cx="28" cy="28" r="3" fill="#111"/>
+      <!-- Center number -->
+      <text id="fngNum" x="28" y="26" text-anchor="middle"
+        font-size="10" font-weight="800" fill="#111"
+        font-family="Syne,sans-serif">—</text>
+    </svg>
+    <div class="fng-label" id="fngLabel">—</div>
+    <div class="fng-sep">|</div>
+    <div class="fng-history">24h: <b id="fngYesterday">—</b></div>
   </div>
+</div>
 
-  <div id="marketContainer">
-    <div class="loading">
-      <div class="spinner"></div>
-      Live prices load ho rahi hain...
-    </div>
+
+<!-- SEARCH + FILTER -->
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search coin name or symbol...">
   </div>
+  <div class="filter-tabs">
+    <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('top10', this)">Top 10</button>
+    <button class="filter-btn" onclick="setFilter('gainers', this)">🚀 Gainers</button>
+    <button class="filter-btn" onclick="setFilter('losers', this)">📉 Losers</button>
+  </div>
+</div>
 
-</main>
+<!-- TABLE HEADER -->
+<div class="table-header">
+  <div>#</div>
+  <div>Coin</div>
+  <div class="th-right th-sortable" onclick="sortBy('price')">Price ↕</div>
+  <div class="th-right th-sortable" onclick="sortBy('change1h')">1h ↕</div>
+  <div class="th-right th-sortable" onclick="sortBy('change')">24h ↕</div>
+  <div class="th-right th-mcap th-sortable" onclick="sortBy('mcap')">MCap ↕</div>
+  <div class="th-right th-vol">Volume</div>
+</div>
+
+<!-- COIN LIST -->
+<div class="coin-list" id="coinList">
+  <div class="loading">
+    <div class="spinner"></div>
+    CoinGecko se top 100 coins load ho rahi hain...
+  </div>
+</div>
 
 <script>
-// ===== SHARED BALANCE =====
+// ===== STATE =====
+let allCoins = [];       // full data from CoinGecko REST
+let livePrices = {};     // price updates from Binance WSS
+let currentFilter = 'all';
+let currentSort = 'rank';
+let sortAsc = true;
+let searchQuery = '';
+let wsRetries = 0;
+
+// ===== STEP 1: REST API — Binance se prices + CoinGecko proxy se logos =====
+
+// Binance 24hr ticker — sab coins ki price + change (no CORS issue)
+async function fetchTop100() {
+  try {
+    // Step A: Binance se top coins price
+    const binRes = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+    if (!binRes.ok) throw new Error('Binance fail');
+    const binData = await binRes.json();
+
+    // Sirf USDT pairs lo
+    const usdtPairs = binData
+      .filter(t => t.symbol.endsWith('USDT') && !t.symbol.includes('DOWN') && !t.symbol.includes('UP') && !t.symbol.includes('BULL') && !t.symbol.includes('BEAR'))
+      .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+      .slice(0, 100);
+
+    // Step B: CoinGecko proxy (public CORS-friendly) se logos + names + mcap
+    const cgRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=1h%2C24h', {
+      headers: { 'Accept': 'application/json' }
+    });
+
+    let cgMap = {};
+    if (cgRes.ok) {
+      const cgData = await cgRes.json();
+      cgData.forEach(coin => {
+        cgMap[coin.symbol.toUpperCase()] = {
+          name:   coin.name,
+          logo:   coin.image,
+          mcap:   coin.market_cap,
+          rank:   coin.market_cap_rank,
+          change1h: coin.price_change_percentage_1h_in_currency || 0,
+        };
+      });
+    }
+
+    // Merge data
+    allCoins = [];
+    let rank = 1;
+    usdtPairs.forEach(t => {
+      const sym = t.symbol.replace('USDT','');
+      const cg = cgMap[sym];
+      allCoins.push({
+        rank:     cg ? cg.rank || rank : rank,
+        id:       sym.toLowerCase(),
+        sym:      sym,
+        name:     cg ? cg.name : sym,
+        logo:     cg ? cg.logo : '',
+        price:    parseFloat(t.lastPrice),
+        change1h: cg ? cg.change1h : 0,
+        change:   parseFloat(t.priceChangePercent),
+        mcap:     cg ? cg.mcap : 0,
+        vol:      parseFloat(t.quoteVolume),
+      });
+      rank++;
+    });
+
+    // Sort by mcap if available
+    allCoins.sort((a,b) => (b.mcap || 0) - (a.mcap || 0));
+    allCoins.forEach((c,i) => c.rank = i+1);
+
+    allCoins.forEach(co => { livePrices[co.sym + 'USDT'] = co.price; });
+    updateStats();
+    renderList();
+    connectBinanceWS();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('coinList').innerHTML =
+      `<div class="loading" style="color:var(--red)">⚠️ Data load nahi hua.<br>Internet check karein ya refresh karein.<br><small>${e.message}</small></div>`;
+  }
+}
+
+// ===== STEP 2: Binance WebSocket — live price stream =====
+let ws;
+function connectBinanceWS() {
+  // Top ~50 pairs stream
+  const pairs = allCoins.slice(0, 50)
+    .map(c => c.sym.toLowerCase() + 'usdt@ticker')
+    .join('/');
+  const wsUrl = `wss://stream.binance.com:9443/stream?streams=${pairs}`;
+
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    setWsStatus('connected', 'Live');
+    wsRetries = 0;
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (!msg.data) return;
+      const d = msg.data;
+      const sym = d.s; // e.g. BTCUSDT
+      const price = parseFloat(d.c);
+      const change = parseFloat(d.P);
+      if (!isNaN(price)) {
+        const old = livePrices[sym];
+        livePrices[sym] = price;
+        // Flash animation
+        if (old && old !== price) {
+          flashPrice(sym, price > old ? 'up' : 'down');
+        }
+        // Update coin data
+        const coin = allCoins.find(c => c.sym + 'USDT' === sym);
+        if (coin) {
+          coin.price  = price;
+          coin.change = change;
+        }
+        updatePriceCell(sym, price, change);
+        updateStats();
+      }
+    } catch(e) {}
+  };
+
+  ws.onerror = () => setWsStatus('error', 'Error');
+
+  ws.onclose = () => {
+    setWsStatus('', 'Reconnecting...');
+    wsRetries++;
+    if (wsRetries < 5) setTimeout(connectBinanceWS, 3000);
+    else setWsStatus('error', 'Disconnected');
+  };
+}
+
+function setWsStatus(cls, label) {
+  const dot = document.getElementById('wsDot');
+  const lbl = document.getElementById('wsLabel');
+  dot.className = 'ws-dot ' + cls;
+  lbl.textContent = label;
+}
+
+// ===== UPDATE SINGLE PRICE CELL (without re-rendering full list) =====
+function updatePriceCell(sym, price, change) {
+  const el = document.getElementById('price-' + sym);
+  const chEl = document.getElementById('change-' + sym);
+  if (el) el.textContent = '$' + fmtPrice(price);
+  if (chEl) {
+    const up = change >= 0;
+    chEl.textContent = (up ? '▲ +' : '▼ ') + Math.abs(change).toFixed(2) + '%';
+    chEl.className = 'change-cell ' + (up ? 'up' : 'down');
+  }
+}
+
+function flashPrice(sym, dir) {
+  const el = document.getElementById('price-' + sym);
+  if (!el) return;
+  el.classList.remove('flash-up', 'flash-down');
+  void el.offsetWidth; // reflow
+  el.classList.add(dir === 'up' ? 'flash-up' : 'flash-down');
+  setTimeout(() => el.classList.remove('flash-up', 'flash-down'), 600);
+}
+
+// ===== RENDER FULL LIST =====
+function renderList() {
+  let coins = [...allCoins];
+
+  // Search
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    coins = coins.filter(c => c.name.toLowerCase().includes(q) || c.sym.toLowerCase().includes(q));
+  }
+
+  // Filter
+  if (currentFilter === 'top10')   coins = coins.slice(0, 10);
+  if (currentFilter === 'gainers') coins = coins.filter(c => c.change > 0).sort((a,b) => b.change - a.change).slice(0, 20);
+  if (currentFilter === 'losers')  coins = coins.filter(c => c.change < 0).sort((a,b) => a.change - b.change).slice(0, 20);
+
+  // Sort
+  if (currentSort === 'price')  coins.sort((a,b) => sortAsc ? a.price - b.price : b.price - a.price);
+  if (currentSort === 'change1h') coins.sort((a,b) => sortAsc ? a.change1h - b.change1h : b.change1h - a.change1h);
+  if (currentSort === 'change') coins.sort((a,b) => sortAsc ? a.change - b.change : b.change - a.change);
+  if (currentSort === 'mcap')   coins.sort((a,b) => sortAsc ? a.mcap - b.mcap : b.mcap - a.mcap);
+
+  if (!coins.length) {
+    document.getElementById('coinList').innerHTML =
+      `<div class="loading" style="padding:30px">Koi coin nahi mila 🔍</div>`;
+    return;
+  }
+
+  const html = coins.map(c => {
+    const up = c.change >= 0;
+    const sym = c.sym + 'USDT';
+    return `
+    <div class="coin-row" onclick="goToCoin('${c.sym}')">
+      <div class="rank">${c.rank}</div>
+      <div class="coin-info">
+        <img src="${c.logo}" alt="${c.sym}" class="coin-logo"
+          onerror="this.outerHTML='<div class=coin-logo-placeholder>${c.sym.slice(0,2)}</div>'"/>
+        <div class="coin-name-wrap">
+          <div class="coin-name">${c.name}</div>
+          <div class="coin-sym">${c.sym}</div>
+        </div>
+      </div>
+      <div class="price-cell" id="price-${sym}">$${fmtPrice(c.price)}</div>
+      <div>
+        <div class="change-cell ${c.change1h >= 0 ? 'up' : 'down'}" id="change1h-${sym}">
+          ${c.change1h >= 0 ? '▲ +' : '▼ '}${Math.abs(c.change1h).toFixed(2)}%
+        </div>
+      </div>
+      <div>
+        <div class="change-cell ${up ? 'up' : 'down'}" id="change-${sym}">
+          ${up ? '▲ +' : '▼ '}${Math.abs(c.change).toFixed(2)}%
+        </div>
+      </div>
+      <div class="mcap-cell">${fmtLarge(c.mcap)}</div>
+      <div class="vol-cell">${fmtLarge(c.vol)}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('coinList').innerHTML = html;
+}
+
+// ===== STATS =====
+function updateStats() {
+  const btc = allCoins.find(c => c.sym === 'BTC');
+  if (btc) document.getElementById('btcPrice').textContent = '$' + fmtPrice(btc.price);
+  document.getElementById('totalCoins').textContent = allCoins.length;
+  const totalMcap = allCoins.reduce((s, c) => s + (c.mcap || 0), 0);
+  document.getElementById('globalMcap').textContent = fmtLarge(totalMcap);
+}
+
+// ===== CONTROLS =====
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function sortBy(col) {
+  if (currentSort === col) sortAsc = !sortAsc;
+  else { currentSort = col; sortAsc = false; }
+  renderList();
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  renderList();
+});
+
+function goToCoin(sym) {
+  // Future: individual coin page
+}
+
+// ===== FORMAT =====
+function fmtPrice(n) {
+  if (!n) return '—';
+  if (n >= 1000)  return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  if (n >= 1)     return n.toFixed(4);
+  if (n >= 0.01)  return n.toFixed(5);
+  return n.toFixed(8);
+}
+
+function fmtLarge(n) {
+  if (!n) return '—';
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(2) + 'M';
+  return '$' + n.toLocaleString();
+}
+
+
+// ===== FEAR & GREED INDEX =====
+function fngColor(val) {
+  if (val >= 75) return '#2e7d32';
+  if (val >= 55) return '#7cb342';
+  if (val >= 45) return '#f9a825';
+  if (val >= 25) return '#ef6c00';
+  return '#e53935';
+}
+
+async function fetchFearGreed() {
+  try {
+    const res = await fetch('https://api.alternative.me/fng/?limit=2');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const today     = data.data[0];
+    const yesterday = data.data[1];
+    const val  = parseInt(today.value);
+    const val24 = parseInt(yesterday.value);
+    const color = fngColor(val);
+
+    // Number in SVG center
+    document.getElementById('fngNum').textContent = val;
+    document.getElementById('fngNum').setAttribute('fill', color);
+
+    // Label next to gauge
+    document.getElementById('fngLabel').textContent = today.value_classification;
+    document.getElementById('fngLabel').style.color = color;
+
+    // 24h
+    document.getElementById('fngYesterday').textContent = val24;
+
+    // Needle: val 0→-90deg, val 100→+90deg
+    const angle = (val / 100) * 180 - 90;
+    document.getElementById('fngNeedle')
+      .setAttribute('transform', `rotate(${angle},28,28)`);
+
+  } catch(e) {
+    document.getElementById('fngLabel').textContent = 'N/A';
+  }
+}
+
+fetchFearGreed();
+
+// ===== INIT =====
+fetchTop100();
+// REST refresh har 60 second (logos/mcap fresh rakhne ke liye)
+setInterval(fetchTop100, 60000);
+</script>
+
+
+<script>
+// ===== BALANCE =====
 function getBal(){ return parseFloat(localStorage.getItem('demoBalance')||10000); }
 function renderHomeBalance(){
   const b = getBal();
-  const init = 10000;
-  const diff = b - init;
-  const pct = ((diff/init)*100).toFixed(2);
-  // Update balance amount
-  const balEl = document.querySelector('.balance-amount');
-  if(balEl){
-    const whole = Math.floor(b).toLocaleString('en-US');
-    const dec = (b % 1).toFixed(2).substring(1);
-    balEl.innerHTML = '$' + whole + '<span>' + dec + '</span>';
-  }
-  // Update change text
-  const chgEl = document.querySelector('.balance-change');
-  if(chgEl){
-    if(diff===0){
-      chgEl.textContent = 'Starting Balance — No trades open';
-      chgEl.style.color = '#aaa';
-    } else {
-      const sign = diff>=0?'+':'';
-      chgEl.textContent = sign + '$' + diff.toFixed(2) + ' (' + sign + pct + '%) All Time';
-      chgEl.style.color = diff>=0?'var(--green)':'var(--red)';
-    }
-  }
-  // Available balance stat
-  const availEl = document.getElementById('availBal');
-  if(availEl) availEl.textContent = '$' + b.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const diff = b - 10000;
+  const pct = ((diff/10000)*100).toFixed(2);
+  const whole = Math.floor(b).toLocaleString('en-US');
+  const dec = (b%1).toFixed(2).substring(1);
+  document.getElementById('homeBalance').innerHTML = '$'+whole+'<span>'+dec+'</span>';
+  const chgEl = document.getElementById('homeChange');
+  if(diff===0){ chgEl.textContent='Starting Balance'; chgEl.style.color='var(--muted)'; }
+  else { const s=diff>=0?'+':''; chgEl.textContent=s+'$'+Math.abs(diff).toFixed(2)+' ('+s+pct+'%)'; chgEl.style.color=diff>=0?'var(--green)':'var(--red)'; }
+  document.getElementById('availBal').textContent='$'+b.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const pnlEl=document.getElementById('homePnl');
+  pnlEl.textContent=(diff>=0?'+':'')+'$'+Math.abs(diff).toFixed(2);
+  pnlEl.className='bstat-value '+(diff>=0?'g':'r');
 }
 
-// Portfolio flat line (no trades)
-function renderPortfolioChart() {
-  const svg = document.getElementById('portfolioChart');
-  const w = 400, h = 60;
-  const y = h / 2;
-  svg.innerHTML = `
-    <defs>
-      <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.15"/>
-        <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <polygon points="0,${h} 0,${y} ${w},${y} ${w},${h}" fill="url(#pg)"/>
-    <line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="6,4"/>
-    <circle cx="${w}" cy="${y}" r="4" fill="#00d4ff"/>
-  `;
-}
-
-// CoinGecko free API — real logos + real prices
-const COINS = [
-  { id: 'bitcoin',      name: 'Bitcoin',   sym: 'BTC'  },
-  { id: 'ethereum',     name: 'Ethereum',  sym: 'ETH'  },
-  { id: 'solana',       name: 'Solana',    sym: 'SOL'  },
-  { id: 'binancecoin',  name: 'BNB',       sym: 'BNB'  },
-  { id: 'ripple',       name: 'XRP',       sym: 'XRP'  },
-  { id: 'dogecoin',     name: 'Dogecoin',  sym: 'DOGE' },
-  { id: 'cardano',      name: 'Cardano',   sym: 'ADA'  },
-  { id: 'tron',         name: 'TRON',      sym: 'TRX'  },
-];
-let coinMeta = {};
-
-// Step 1: logos + prices dono ek saath (markets endpoint)
-async function fetchMeta() {
-  const ids = COINS.map(c => c.id).join(',');
-  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=20&page=1&sparkline=false`;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    data.forEach(coin => {
-      coinMeta[coin.id] = {
-        logo: coin.image,
-        price: coin.current_price,
-        change: coin.price_change_percentage_24h
-      };
-    });
-    renderMarkets();
-    document.getElementById('liveDot').style.background = '#00e676';
-  } catch(e) {
-    document.getElementById('marketContainer').innerHTML =
-      `<div class="api-error">⚠️ Live prices load nahi hui. Internet check karein.</div>`;
-    document.getElementById('liveDot').style.background = '#ff1744';
-  }
-}
-
-// Step 2: sirf prices (2 second interval — fast update)
-async function fetchPrices() {
-  const ids = COINS.map(c => c.id).join(',');
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    COINS.forEach(c => {
-      if (data[c.id] && coinMeta[c.id]) {
-        coinMeta[c.id].price  = data[c.id].usd;
-        coinMeta[c.id].change = data[c.id].usd_24h_change;
-      }
-    });
-    renderMarkets();
-    document.getElementById('liveDot').style.background = '#00e676';
-  } catch(e) { /* silent fail */ }
-}
-
-function renderMarkets() {
-  const html = COINS.map(c => {
-    const m = coinMeta[c.id];
-    if (!m) return '';
-    const up = m.change >= 0;
-    return `
-    <a href="prices.html" class="market-row">
-      <div class="mr-left">
-        <img src="${m.logo}" alt="${c.sym}" class="coin-logo" onerror="this.style.display='none'"/>
-        <div>
-          <div class="mr-name">${c.name}</div>
-          <div class="mr-sym">${c.sym}/USDT</div>
-        </div>
-      </div>
-      <div class="mr-right">
-        <div class="mr-price">$${fmt(m.price)}</div>
-        <div class="mr-change" style="color:${up ? 'var(--green)' : 'var(--red)'}">
-          ${up ? '&#9650;' : '&#9660;'} ${Math.abs(m.change).toFixed(2)}%
-        </div>
-      </div>
-    </a>`;
-  }).join('');
-  document.getElementById('marketContainer').innerHTML = `<div class="market-list">${html}</div>`;
-}
-
-function fmt(n) {
-  if (n >= 1000) return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-  if (n >= 1)    return n.toFixed(4);
-  return n.toFixed(6);
-}
-
-// Init
-renderPortfolioChart();
-fetchMeta();
-setInterval(fetchPrices, 2000);
-setInterval(fetchMeta, 300000);
-</script>
-  <script>
-function toggleVisualMenu(e) {
+function toggleVisualMenu(e){
   e.preventDefault();
-  const m = document.getElementById('visualMenu');
-  const btn = e.currentTarget;
-  const rect = btn.getBoundingClientRect();
-  m.style.top = (rect.bottom + 6) + 'px';
-  m.style.left = rect.left + 'px';
-  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+  const m=document.getElementById('visualMenu');
+  const r=e.currentTarget.getBoundingClientRect();
+  m.style.top=(r.bottom+4)+'px';
+  m.style.left=r.left+'px';
+  m.style.display=m.style.display==='none'?'block':'none';
 }
-document.addEventListener('click', e => {
-  if(!e.target.closest('#visualMenu') && !e.target.textContent.includes('Visual'))
-    document.getElementById('visualMenu')?.style && (document.getElementById('visualMenu').style.display='none');
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#visualMenu')&&!e.target.textContent.includes('Visual'))
+    document.getElementById('visualMenu').style.display='none';
 });
-                                                     </script>
+
+renderHomeBalance();
+setInterval(renderHomeBalance, 3000);
+
+
+// ===== STATE =====
+let allCoins = [];       // full data from CoinGecko REST
+let livePrices = {};     // price updates from Binance WSS
+let currentFilter = 'all';
+let currentSort = 'rank';
+let sortAsc = true;
+let searchQuery = '';
+let wsRetries = 0;
+
+// ===== STEP 1: REST API — Binance se prices + CoinGecko proxy se logos =====
+
+// Binance 24hr ticker — sab coins ki price + change (no CORS issue)
+async function fetchTop100() {
+  try {
+    // Step A: Binance se top coins price
+    const binRes = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+    if (!binRes.ok) throw new Error('Binance fail');
+    const binData = await binRes.json();
+
+    // Sirf USDT pairs lo
+    const usdtPairs = binData
+      .filter(t => t.symbol.endsWith('USDT') && !t.symbol.includes('DOWN') && !t.symbol.includes('UP') && !t.symbol.includes('BULL') && !t.symbol.includes('BEAR'))
+      .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+      .slice(0, 100);
+
+    // Step B: CoinGecko proxy (public CORS-friendly) se logos + names + mcap
+    const cgRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=1h%2C24h', {
+      headers: { 'Accept': 'application/json' }
+    });
+
+    let cgMap = {};
+    if (cgRes.ok) {
+      const cgData = await cgRes.json();
+      cgData.forEach(coin => {
+        cgMap[coin.symbol.toUpperCase()] = {
+          name:   coin.name,
+          logo:   coin.image,
+          mcap:   coin.market_cap,
+          rank:   coin.market_cap_rank,
+          change1h: coin.price_change_percentage_1h_in_currency || 0,
+        };
+      });
+    }
+
+    // Merge data
+    allCoins = [];
+    let rank = 1;
+    usdtPairs.forEach(t => {
+      const sym = t.symbol.replace('USDT','');
+      const cg = cgMap[sym];
+      allCoins.push({
+        rank:     cg ? cg.rank || rank : rank,
+        id:       sym.toLowerCase(),
+        sym:      sym,
+        name:     cg ? cg.name : sym,
+        logo:     cg ? cg.logo : '',
+        price:    parseFloat(t.lastPrice),
+        change1h: cg ? cg.change1h : 0,
+        change:   parseFloat(t.priceChangePercent),
+        mcap:     cg ? cg.mcap : 0,
+        vol:      parseFloat(t.quoteVolume),
+      });
+      rank++;
+    });
+
+    // Sort by mcap if available
+    allCoins.sort((a,b) => (b.mcap || 0) - (a.mcap || 0));
+    allCoins.forEach((c,i) => c.rank = i+1);
+
+    allCoins.forEach(co => { livePrices[co.sym + 'USDT'] = co.price; });
+    updateStats();
+    renderList();
+    connectBinanceWS();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('coinList').innerHTML =
+      `<div class="loading" style="color:var(--red)">⚠️ Data load nahi hua.<br>Internet check karein ya refresh karein.<br><small>${e.message}</small></div>`;
+  }
+}
+
+// ===== STEP 2: Binance WebSocket — live price stream =====
+let ws;
+function connectBinanceWS() {
+  // Top ~50 pairs stream
+  const pairs = allCoins.slice(0, 50)
+    .map(c => c.sym.toLowerCase() + 'usdt@ticker')
+    .join('/');
+  const wsUrl = `wss://stream.binance.com:9443/stream?streams=${pairs}`;
+
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    setWsStatus('connected', 'Live');
+    wsRetries = 0;
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (!msg.data) return;
+      const d = msg.data;
+      const sym = d.s; // e.g. BTCUSDT
+      const price = parseFloat(d.c);
+      const change = parseFloat(d.P);
+      if (!isNaN(price)) {
+        const old = livePrices[sym];
+        livePrices[sym] = price;
+        // Flash animation
+        if (old && old !== price) {
+          flashPrice(sym, price > old ? 'up' : 'down');
+        }
+        // Update coin data
+        const coin = allCoins.find(c => c.sym + 'USDT' === sym);
+        if (coin) {
+          coin.price  = price;
+          coin.change = change;
+        }
+        updatePriceCell(sym, price, change);
+        updateStats();
+      }
+    } catch(e) {}
+  };
+
+  ws.onerror = () => setWsStatus('error', 'Error');
+
+  ws.onclose = () => {
+    setWsStatus('', 'Reconnecting...');
+    wsRetries++;
+    if (wsRetries < 5) setTimeout(connectBinanceWS, 3000);
+    else setWsStatus('error', 'Disconnected');
+  };
+}
+
+function setWsStatus(cls, label) {
+  const dot = document.getElementById('wsDot');
+  const lbl = document.getElementById('wsLabel');
+  dot.className = 'ws-dot ' + cls;
+  lbl.textContent = label;
+}
+
+// ===== UPDATE SINGLE PRICE CELL (without re-rendering full list) =====
+function updatePriceCell(sym, price, change) {
+  const el = document.getElementById('price-' + sym);
+  const chEl = document.getElementById('change-' + sym);
+  if (el) el.textContent = '$' + fmtPrice(price);
+  if (chEl) {
+    const up = change >= 0;
+    chEl.textContent = (up ? '▲ +' : '▼ ') + Math.abs(change).toFixed(2) + '%';
+    chEl.className = 'change-cell ' + (up ? 'up' : 'down');
+  }
+}
+
+function flashPrice(sym, dir) {
+  const el = document.getElementById('price-' + sym);
+  if (!el) return;
+  el.classList.remove('flash-up', 'flash-down');
+  void el.offsetWidth; // reflow
+  el.classList.add(dir === 'up' ? 'flash-up' : 'flash-down');
+  setTimeout(() => el.classList.remove('flash-up', 'flash-down'), 600);
+}
+
+// ===== RENDER FULL LIST =====
+function renderList() {
+  let coins = [...allCoins];
+
+  // Search
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    coins = coins.filter(c => c.name.toLowerCase().includes(q) || c.sym.toLowerCase().includes(q));
+  }
+
+  // Filter
+  if (currentFilter === 'top10')   coins = coins.slice(0, 10);
+  if (currentFilter === 'gainers') coins = coins.filter(c => c.change > 0).sort((a,b) => b.change - a.change).slice(0, 20);
+  if (currentFilter === 'losers')  coins = coins.filter(c => c.change < 0).sort((a,b) => a.change - b.change).slice(0, 20);
+
+  // Sort
+  if (currentSort === 'price')  coins.sort((a,b) => sortAsc ? a.price - b.price : b.price - a.price);
+  if (currentSort === 'change1h') coins.sort((a,b) => sortAsc ? a.change1h - b.change1h : b.change1h - a.change1h);
+  if (currentSort === 'change') coins.sort((a,b) => sortAsc ? a.change - b.change : b.change - a.change);
+  if (currentSort === 'mcap')   coins.sort((a,b) => sortAsc ? a.mcap - b.mcap : b.mcap - a.mcap);
+
+  if (!coins.length) {
+    document.getElementById('coinList').innerHTML =
+      `<div class="loading" style="padding:30px">Koi coin nahi mila 🔍</div>`;
+    return;
+  }
+
+  const html = coins.map(c => {
+    const up = c.change >= 0;
+    const sym = c.sym + 'USDT';
+    return `
+    <div class="coin-row" onclick="goToCoin('${c.sym}')">
+      <div class="rank">${c.rank}</div>
+      <div class="coin-info">
+        <img src="${c.logo}" alt="${c.sym}" class="coin-logo"
+          onerror="this.outerHTML='<div class=coin-logo-placeholder>${c.sym.slice(0,2)}</div>'"/>
+        <div class="coin-name-wrap">
+          <div class="coin-name">${c.name}</div>
+          <div class="coin-sym">${c.sym}</div>
+        </div>
+      </div>
+      <div class="price-cell" id="price-${sym}">$${fmtPrice(c.price)}</div>
+      <div>
+        <div class="change-cell ${c.change1h >= 0 ? 'up' : 'down'}" id="change1h-${sym}">
+          ${c.change1h >= 0 ? '▲ +' : '▼ '}${Math.abs(c.change1h).toFixed(2)}%
+        </div>
+      </div>
+      <div>
+        <div class="change-cell ${up ? 'up' : 'down'}" id="change-${sym}">
+          ${up ? '▲ +' : '▼ '}${Math.abs(c.change).toFixed(2)}%
+        </div>
+      </div>
+      <div class="mcap-cell">${fmtLarge(c.mcap)}</div>
+      <div class="vol-cell">${fmtLarge(c.vol)}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('coinList').innerHTML = html;
+}
+
+// ===== STATS =====
+function updateStats() {
+  const btc = allCoins.find(c => c.sym === 'BTC');
+  if (btc) document.getElementById('btcPrice').textContent = '$' + fmtPrice(btc.price);
+  document.getElementById('totalCoins').textContent = allCoins.length;
+  const totalMcap = allCoins.reduce((s, c) => s + (c.mcap || 0), 0);
+  document.getElementById('globalMcap').textContent = fmtLarge(totalMcap);
+}
+
+// ===== CONTROLS =====
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function sortBy(col) {
+  if (currentSort === col) sortAsc = !sortAsc;
+  else { currentSort = col; sortAsc = false; }
+  renderList();
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  renderList();
+});
+
+function goToCoin(sym) {
+  // Future: individual coin page
+}
+
+// ===== FORMAT =====
+function fmtPrice(n) {
+  if (!n) return '—';
+  if (n >= 1000)  return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  if (n >= 1)     return n.toFixed(4);
+  if (n >= 0.01)  return n.toFixed(5);
+  return n.toFixed(8);
+}
+
+function fmtLarge(n) {
+  if (!n) return '—';
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(2) + 'M';
+  return '$' + n.toLocaleString();
+}
+
+
+// ===== FEAR & GREED INDEX =====
+function fngColor(val) {
+  if (val >= 75) return '#2e7d32';
+  if (val >= 55) return '#7cb342';
+  if (val >= 45) return '#f9a825';
+  if (val >= 25) return '#ef6c00';
+  return '#e53935';
+}
+
+async function fetchFearGreed() {
+  try {
+    const res = await fetch('https://api.alternative.me/fng/?limit=2');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const today     = data.data[0];
+    const yesterday = data.data[1];
+    const val  = parseInt(today.value);
+    const val24 = parseInt(yesterday.value);
+    const color = fngColor(val);
+
+    // Number in SVG center
+    document.getElementById('fngNum').textContent = val;
+    document.getElementById('fngNum').setAttribute('fill', color);
+
+    // Label next to gauge
+    document.getElementById('fngLabel').textContent = today.value_classification;
+    document.getElementById('fngLabel').style.color = color;
+
+    // 24h
+    document.getElementById('fngYesterday').textContent = val24;
+
+    // Needle: val 0→-90deg, val 100→+90deg
+    const angle = (val / 100) * 180 - 90;
+    document.getElementById('fngNeedle')
+      .setAttribute('transform', `rotate(${angle},28,28)`);
+
+  } catch(e) {
+    document.getElementById('fngLabel').textContent = 'N/A';
+  }
+}
+
+fetchFearGreed();
+
+// ===== INIT =====
+fetchTop100();
+// REST refresh har 60 second (logos/mcap fresh rakhne ke liye)
+setInterval(fetchTop100, 60000);
+
+</script>
 </body>
 </html>
