@@ -1199,5 +1199,20 @@ fetchTop100();
 setInterval(fetchTop100, 60000);
 
 </script>
+  <script>
+function toggleVisualMenu(e) {
+  e.preventDefault();
+  const m = document.getElementById('visualMenu');
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  m.style.top = (rect.bottom + 6) + 'px';
+  m.style.left = rect.left + 'px';
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('#visualMenu') && !e.target.textContent.includes('Visual'))
+    document.getElementById('visualMenu')?.style && (document.getElementById('visualMenu').style.display='none');
+});
+  </script>
 </body>
 </html>
