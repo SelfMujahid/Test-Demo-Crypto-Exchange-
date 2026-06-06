@@ -2,734 +2,528 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TestTrade — BTC Whale Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TestTrade — Blockchair Canvas Engine Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#f0f2f5; --card:#fff; --border:#e0e0e0;
-    --btc:#f7931a; --text:#111; --muted:#777;
-    --green:#00c853; --red:#f44336; --blue:#1565c0;
-    --purple:#6a1b9a;
+    --bg:#ffffff; --card:#f8f9fa; --border:#e9ecef;
+    --btc:#f7931a; --text:#212529; --muted:#6c757d;
+    --green:#00c853; --red:#f44336; --blue:#1e88e5; --yellow:#fdd835;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
   body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; overflow:hidden; height:100vh; }
 
-  /* ===== TOPBAR ===== */
+  /* TOPBAR UI */
   .topbar {
     position:fixed; top:0; left:0; right:0; z-index:200;
-    background:#fff; border-bottom:1px solid var(--border);
-    display:flex; flex-direction:column;
+    background:var(--card); border-bottom:1px solid var(--border);
+    display:flex; flex-direction:column; box-shadow:0 2px 10px rgba(0,0,0,0.05);
   }
-
-  .tb-row1 {
-    display:flex; align-items:center; gap:10px;
-    padding:8px 16px; flex-wrap:wrap;
-    border-bottom:1px solid #f0f0f0;
-  }
-  .logo { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; color:#111; text-decoration:none; }
+  .tb-row1 { display:flex; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--border); }
+  .logo { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; color:#111; text-decoration:none; }
   .logo span { color:var(--btc); }
-  .back-btn { padding:4px 10px; background:#f5f5f5; border:1px solid #ddd; border-radius:7px; color:#555; font-size:11px; text-decoration:none; }
-  .ws-pill { display:flex; align-items:center; gap:5px; background:#f8f8f8; border:1px solid #eee; border-radius:20px; padding:4px 10px; font-size:10px; color:#888; }
-  .ws-dot { width:6px; height:6px; border-radius:50%; background:#ccc; }
-  .ws-dot.on  { background:var(--green); animation:pulse 1.5s infinite; }
-  .ws-dot.err { background:var(--red); }
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,200,83,0.4)}50%{box-shadow:0 0 0 4px rgba(0,200,83,0)}}
+  .ws-pill { display:flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--border); border-radius:20px; padding:4px 12px; font-size:11px; color:var(--muted); margin-left:auto; }
+  .ws-dot { width:8px; height:8px; border-radius:50%; background:#ced4da; }
+  .ws-dot.on { background:var(--green); box-shadow:0 0 6px var(--green); }
+  
+  .tb-row2 { display:flex; align-items:stretch; overflow-x:auto; background:#ffffff; scrollbar-width:none; border-bottom:1px solid var(--border); }
+  .stat-box { flex:0 0 auto; padding:10px 20px; border-right:1px solid var(--border); min-width:140px; }
+  .sb-label { font-size:9px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; }
+  .sb-val { font-family:'Inter',sans-serif; font-size:15px; font-weight:700; color:#111; margin-top:2px; white-space:nowrap; }
+  
+  .tb-row3 { display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--card); overflow-x:auto; scrollbar-width:none; }
+  .min-btn { padding:5px 12px; border-radius:6px; background:#fff; border:1px solid var(--border); color:var(--muted); font-size:11px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .min-btn.active { background:rgba(247,147,26,0.1); border-color:var(--btc); color:var(--btc); }
 
-  /* TIME FILTER */
-  .time-filter { display:flex; align-items:center; gap:4px; margin-left:auto; flex-wrap:wrap; }
-  .tf-btn { padding:4px 10px; border-radius:6px; background:#f5f5f5; border:1px solid #e0e0e0; color:#777; font-size:10px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; white-space:nowrap; }
-  .tf-btn.active { background:rgba(247,147,26,0.12); border-color:var(--btc); color:var(--btc); }
+  /* MAIN LAYOUT WRAP */
+  .main-wrap { position:fixed; left:0; right:0; bottom:0; display:grid; grid-template-columns:1fr 280px; }
+  @media(max-width:768px){ .main-wrap { grid-template-columns:1fr; } .side-panel { display:none; } }
+  #txCanvas { width:100%; height:100%; display:block; background:#ffffff; }
 
-  /* STATS ROW */
-  .tb-row2 { display:flex; align-items:stretch; gap:0; overflow-x:auto; scrollbar-width:none; }
-  .tb-row2::-webkit-scrollbar { display:none; }
-
-  .stat-box {
-    flex:0 0 auto; padding:8px 16px;
-    border-right:1px solid #f0f0f0;
-    min-width:120px;
-    display:flex; flex-direction:column; gap:2px;
-  }
-  .stat-box:last-child { border-right:none; }
-  .sb-label { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#aaa; }
-  .sb-val { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:#111; }
-  .sb-sub { font-size:9px; color:#aaa; }
-  .btc-col { color:var(--btc); }
-  .grn-col { color:var(--green); }
-  .red-col { color:var(--red); }
-
-  /* EXCHANGE STATS ROW */
-  .tb-row3 {
-    display:flex; align-items:stretch; gap:0;
-    overflow-x:auto; scrollbar-width:none;
-    border-top:1px solid #f0f0f0;
-    background:#fafafa;
-  }
-  .tb-row3::-webkit-scrollbar { display:none; }
-  .exch-box {
-    flex:0 0 auto; padding:6px 14px;
-    border-right:1px solid #f0f0f0;
-    display:flex; align-items:center; gap:8px;
-    min-width:160px;
-  }
-  .exch-logo { width:22px; height:22px; border-radius:50%; object-fit:cover; flex-shrink:0; background:#eee; display:flex; align-items:center; justify-content:center; font-size:12px; }
-  .exch-logo img { width:22px; height:22px; border-radius:50%; }
-  .exch-info { display:flex; flex-direction:column; gap:1px; }
-  .exch-name { font-size:11px; font-weight:700; color:#333; }
-  .exch-stats { display:flex; gap:8px; }
-  .exch-in  { font-size:9px; color:var(--green); font-weight:600; }
-  .exch-out { font-size:9px; color:var(--red);   font-weight:600; }
-
-  /* FILTER BUTTONS */
-  .tb-row4 { display:flex; align-items:center; gap:4px; padding:6px 16px; border-top:1px solid #f0f0f0; flex-wrap:wrap; }
-  .min-btn { padding:4px 10px; border-radius:6px; background:#f5f5f5; border:1px solid #e0e0e0; color:#777; font-size:10px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; }
-  .min-btn.active { background:rgba(247,147,26,0.12); border-color:var(--btc); color:var(--btc); }
-  .sound-btn { padding:4px 10px; border-radius:6px; background:#f5f5f5; border:1px solid #e0e0e0; color:#777; font-size:10px; cursor:pointer; font-family:'Inter',sans-serif; margin-left:auto; }
-  .sound-btn.on { background:rgba(0,200,83,0.1); border-color:var(--green); color:var(--green); }
-
-  /* MAIN */
-  .main-wrap {
-    position:fixed; left:0; right:0; bottom:0;
-    display:grid; grid-template-columns:1fr 280px;
-  }
-  @media(max-width:700px){ .main-wrap{ grid-template-columns:1fr; } .side-panel{ display:none; } }
-
-  #txCanvas { width:100%; height:100%; display:block; }
-
-  /* SIDE PANEL */
+  /* SIDE FEED PANEL */
   .side-panel { background:var(--card); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
-  .side-hdr { padding:10px 14px; border-bottom:1px solid var(--border); font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
-  .feed-list { flex:1; overflow-y:auto; }
-  .feed-list::-webkit-scrollbar { width:2px; }
-  .feed-list::-webkit-scrollbar-thumb { background:#ddd; }
+  .side-hdr { padding:12px 16px; border-bottom:1px solid var(--border); font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; display:flex; justify-content:space-between; }
+  .feed-list { flex:1; overflow-y:auto; scrollbar-width:none; }
+  .feed-item { padding:10px 14px; border-bottom:1px solid var(--border); font-size:12px; background:#fff; font-family:'Inter',sans-serif; }
+  .fi-top { display:flex; justify-content:space-between; margin-bottom:3px; }
+  .fi-amt { font-weight:700; color:var(--btc); }
+  .fi-label { font-size:10px; font-weight:700; background:#f1f3f5; padding:2px 6px; border-radius:4px; color:#495057; }
 
-  .feed-item { padding:8px 12px; border-bottom:1px solid #f5f5f5; cursor:pointer; transition:background 0.15s; animation:slideIn 0.3s ease; }
-  .feed-item:hover { background:#fafafa; }
-  @keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-  .fi-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
-  .fi-amt { font-size:12px; font-weight:700; color:var(--btc); }
-  .fi-badge { font-size:9px; font-weight:700; padding:1px 6px; border-radius:4px; }
-  .badge-whale   { background:rgba(247,147,26,0.15); color:#c47a00; }
-  .badge-exch    { background:rgba(21,101,192,0.12);  color:var(--blue); }
-  .badge-deposit { background:rgba(0,200,83,0.12);    color:#007a30; }
-  .badge-withdraw{ background:rgba(244,67,54,0.1);    color:var(--red); }
-  .badge-unknown { background:#f0f0f0; color:#888; }
-  .fi-route { font-size:10px; color:#555; }
-  .fi-meta  { display:flex; justify-content:space-between; margin-top:1px; }
-  .fi-usd  { font-size:9px; color:var(--muted); }
-  .fi-time { font-size:9px; color:#ccc; }
-
-  /* TOOLTIP */
-  .tooltip {
-    position:fixed; z-index:400; pointer-events:none; display:none;
-    background:#fff; border:1px solid #e0e0e0; border-radius:12px;
-    padding:12px 16px; min-width:200px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+  /* DYNAMIC FLOATING POPUP OVERLAY */
+  .tx-popup {
+    position:fixed; z-index:400; display:none;
+    background:rgba(255, 255, 255, 0.98); backdrop-filter:blur(10px);
+    border:1px solid var(--border); border-radius:14px; padding:12px 16px; width:260px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.12); pointer-events:auto;
   }
-  .tt-title { font-size:13px; font-weight:700; color:#111; margin-bottom:8px; }
-  .tt-row { display:flex; justify-content:space-between; gap:16px; font-size:11px; margin-top:3px; }
-  .tt-lbl { color:#888; }
-  .tt-val { font-weight:600; }
-  .tt-hash { font-size:9px; color:#bbb; margin-top:6px; word-break:break-all; font-family:monospace; }
+  .pop-hdr { display:flex; align-items:center; gap:8px; margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:6px; }
+  .pop-logo { width:24px; height:24px; border-radius:50%; object-fit:cover; display:none; }
+  .pop-logo.show { display:block; }
+  .pop-title { font-size:13px; font-weight:800; color:#111; }
+  .pop-row { display:flex; justify-content:space-between; font-size:11px; margin-top:4px; color:#333; }
+  .pop-lbl { color:var(--muted); font-weight:500; }
+  .pop-val { font-weight:700; }
+  .pop-addr-wrapper {
+    margin-top:8px; background:#f1f3f5; border-radius:6px;
+    padding:6px 8px; display:flex; align-items:center; justify-content:space-between; gap:6px;
+  }
+  .pop-addr { font-size:10px; font-family:monospace; color:#495057; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pop-copy-btn { background:none; border:none; color:var(--blue); cursor:pointer; padding:2px; display:flex; align-items:center; justify-content:center; }
+  .pop-copy-btn:active { transform:scale(0.85); }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:#212529; color:#fff; padding:10px 20px; border-radius:30px; font-weight:600; font-size:12px; z-index:500; box-shadow:0 8px 24px rgba(0,0,0,0.15); transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events:none; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
 <div class="topbar" id="topbar">
-  <!-- ROW 1: Logo + WS + Time Filter -->
   <div class="tb-row1">
-    <a href="index.html" class="back-btn">← Back</a>
-    <div class="logo">₿ <span>Whale</span> Tracker</div>
-    <div class="ws-pill">
-      <div class="ws-dot" id="wsDot"></div>
-      <span id="wsLabel">Connecting...</span>
-    </div>
-    <div class="time-filter">
-      <span style="font-size:10px;color:#aaa;font-weight:600">Period:</span>
-      <button class="tf-btn active" onclick="setPeriod('session',this)">Session</button>
-      <button class="tf-btn" onclick="setPeriod('1m',this)">1m</button>
-      <button class="tf-btn" onclick="setPeriod('5m',this)">5m</button>
-      <button class="tf-btn" onclick="setPeriod('15m',this)">15m</button>
-      <button class="tf-btn" onclick="setPeriod('30m',this)">30m</button>
-      <button class="tf-btn" onclick="setPeriod('1h',this)">1h</button>
-      <button class="tf-btn" onclick="setPeriod('2h',this)">2h</button>
-      <button class="tf-btn" onclick="setPeriod('4h',this)">4h</button>
-    </div>
+    <div class="logo">₿ <span>Blockchair</span> Flow</div>
+    <div class="ws-pill"><div class="ws-dot" id="wsDot"></div><span id="wsLabel">Connecting Engine...</span></div>
   </div>
-
-  <!-- ROW 2: Global Stats -->
   <div class="tb-row2">
-    <div class="stat-box">
-      <div class="sb-label">Total Transactions</div>
-      <div class="sb-val" id="sTxTotal">0</div>
-      <div class="sb-sub" id="sPeriodLabel">This Session</div>
-    </div>
-    <div class="stat-box">
-      <div class="sb-label">Total BTC Moved</div>
-      <div class="sb-val btc-col" id="sTotalBTC">0.00 ₿</div>
-      <div class="sb-sub" id="sTotalUSD">$0</div>
-    </div>
-    <div class="stat-box">
-      <div class="sb-label">Biggest TX</div>
-      <div class="sb-val btc-col" id="sBiggest">0.00 ₿</div>
-      <div class="sb-sub" id="sBiggestUSD">$0</div>
-    </div>
-    <div class="stat-box">
-      <div class="sb-label">Exchange Deposits</div>
-      <div class="sb-val grn-col" id="sDeposits">0.00 ₿</div>
-      <div class="sb-sub" id="sDepositsUSD">$0</div>
-    </div>
-    <div class="stat-box">
-      <div class="sb-label">Exchange Withdrawals</div>
-      <div class="sb-val red-col" id="sWithdraws">0.00 ₿</div>
-      <div class="sb-sub" id="sWithdrawsUSD">$0</div>
-    </div>
-    <div class="stat-box">
-      <div class="sb-label">🐳 Whale Txs</div>
-      <div class="sb-val" style="color:var(--btc)" id="sWhales">0</div>
-      <div class="sb-sub" id="sWhalesBTC">0.00 ₿</div>
-    </div>
-    <div class="stat-box">
-      <div class="sb-label">BTC Price</div>
-      <div class="sb-val" id="sBTCPrice">—</div>
-      <div class="sb-sub">Binance Live</div>
-    </div>
+    <div class="stat-box"><div class="sb-label">Filtered Streams</div><div class="sb-val" id="sTxTotal">0</div></div>
+    <div class="stat-box"><div class="sb-label">Volume Monitored</div><div class="sb-val" id="sTotalBTC" style="color:var(--btc)">0.00 ₿</div></div>
+    <div class="stat-box"><div class="sb-label">Peak Transaction</div><div class="sb-val" id="sBiggest">0.00 ₿</div></div>
+    <div class="stat-box"><div class="sb-label">Live Price Index</div><div class="sb-val" id="sBTCPrice">$—</div></div>
   </div>
-
-  <!-- ROW 3: Per-Exchange Stats -->
-  <div class="tb-row3" id="exchRow">
-    <div class="exch-box" style="color:#aaa;font-size:10px;min-width:auto">Exchange flows:</div>
-  </div>
-
-  <!-- ROW 4: Min Filter -->
-  <div class="tb-row4">
-    <span style="font-size:10px;color:#aaa;font-weight:600">Min BTC:</span>
-    <button class="min-btn active" onclick="setMin(0,this)">All</button>
-    <button class="min-btn" onclick="setMin(0.1,this)">0.1+</button>
-    <button class="min-btn" onclick="setMin(1,this)">1+</button>
-    <button class="min-btn" onclick="setMin(10,this)">10+</button>
-    <button class="min-btn" onclick="setMin(50,this)">50+</button>
-    <button class="min-btn" onclick="setMin(100,this)">🐳 100+</button>
-    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔕 Sound</button>
+  <div class="tb-row3">
+    <button class="min-btn active" onclick="setMinFilter(0,this)">Show All Verified</button>
+    <button class="min-btn" onclick="setMinFilter(1,this)">1+ BTC Scale</button>
+    <button class="min-btn" onclick="setMinFilter(10,this)">10+ BTC Scale</button>
+    <button class="min-btn" onclick="setMinFilter(50,this)">50+ BTC Scale</button>
   </div>
 </div>
 
-<div class="main-wrap" id="mainWrap">
+<div class="main-wrap">
   <canvas id="txCanvas"></canvas>
   <div class="side-panel">
-    <div class="side-hdr">
-      Live Feed
-      <span id="feedCount" style="color:var(--btc);text-transform:none;letter-spacing:0">0 txs</span>
-    </div>
+    <div class="side-hdr">Live Validation Feed <span id="feedCount" style="color:var(--btc)">0 tx</span></div>
     <div class="feed-list" id="feedList"></div>
   </div>
 </div>
 
-<div class="tooltip" id="tooltip">
-  <div class="tt-title" id="ttTitle">—</div>
-  <div class="tt-row"><span class="tt-lbl">Amount</span><span class="tt-val" id="ttBTC" style="color:var(--btc)">—</span></div>
-  <div class="tt-row"><span class="tt-lbl">USD Value</span><span class="tt-val" id="ttUSD">—</span></div>
-  <div class="tt-row"><span class="tt-lbl">From</span><span class="tt-val" id="ttFrom">—</span></div>
-  <div class="tt-row"><span class="tt-lbl">To</span><span class="tt-val" id="ttTo">—</span></div>
-  <div class="tt-row"><span class="tt-lbl">Type</span><span class="tt-val" id="ttType">—</span></div>
-  <div class="tt-hash" id="ttHash"></div>
+<div class="tx-popup" id="txPopup">
+  <div class="pop-hdr">
+    <img src="" class="pop-logo" id="popLogo" alt="">
+    <div class="pop-title" id="popTitle">—</div>
+  </div>
+  <div class="pop-row"><span class="pop-lbl">Amount:</span><span class="pop-val" id="popBTC" style="color:var(--btc)">—</span></div>
+  <div class="pop-row"><span class="pop-lbl">Value USD:</span><span class="pop-val" id="popUSD">—</span></div>
+  <div class="pop-row"><span class="pop-lbl">Time Tracked:</span><span class="pop-val" id="popTime">—</span></div>
+  <div class="pop-addr-wrapper">
+    <div class="pop-addr" id="popAddr">bc1q...</div>
+    <button class="pop-copy-btn" onclick="copyWalletAddress()" title="Copy Wallet Address">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    </button>
+  </div>
 </div>
 
+<div class="toast" id="toast">🔗 Transaction Hash (TxID) Copied!</div>
+
 <script>
-// ===== STATE =====
-let btcPrice=67000, minBTC=0, soundOn=false;
-let nodes=[], arcs=[], hovered=null, raf;
-let sessionStart=Date.now(), currentPeriod='session';
+let btcPrice = 67200, minBTCFilter = 0;
+let nodes = [], activeDragNode = null;
+let stats = { tx: 0, btc: 0, max: 0 };
+const imgCache = {};
 
-// Stats
-let stats={ tx:0, btc:0, biggest:0, biggestUSD:0, deposits:0, depositsUSD:0, withdraws:0, withdrawsUSD:0, whales:0, whalesBTC:0 };
-const allTxs=[];
-
-// Exchange data
-const EXCHANGES={
-  'Binance':  { color:'#f3ba2f', emoji:'🟡', in:0, inUSD:0, out:0, outUSD:0,
-    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/bnb.png' },
-  'Coinbase': { color:'#0052ff', emoji:'🔵', in:0, inUSD:0, out:0, outUSD:0,
-    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/eth.png' },
-  'Kraken':   { color:'#5741d9', emoji:'🟣', in:0, inUSD:0, out:0, outUSD:0,
-    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/xrp.png' },
-  'OKX':      { color:'#000000', emoji:'⚫', in:0, inUSD:0, out:0, outUSD:0,
-    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/okb.png' },
-  'Huobi':    { color:'#1a6aff', emoji:'🔷', in:0, inUSD:0, out:0, outUSD:0,
-    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/ht.png' },
-  'Bitfinex': { color:'#16b157', emoji:'🟢', in:0, inUSD:0, out:0, outUSD:0,
-    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/leo.png' },
+// VECTOR BASE64 IMAGES FOR INSTANT CANVAS LOADING
+const LOGO_VECTORS = {
+  'Binance':  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23F3BA2F"><path d="M12 0l3.4 3.4L12 6.8l-3.4-3.4L12 0zm0 17.2l3.4 3.4-3.4 3.4-3.4-3.4 3.4-3.4zM3.4 15.4L0 12l3.4-3.4 3.4 3.4-3.4 3.4zm17.2 0l-3.4-3.4 3.4-3.4 3.4 3.4-3.4 3.4zM12 8.6l3.4 3.4-3.4 3.4-3.4-3.4 3.4-3.4z"/></svg>',
+  'Coinbase': 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230052FF"><circle cx="12" cy="12" r="12"/><circle cx="12" cy="12" r="7" fill="white"/></svg>',
+  'Kraken':   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%235741D9"><path d="M4 2h16s2 4 2 7-3 6-5 7v6h-2v-5l-3-2-3 2v5H7v-6c-2-1-5-4-5-7s2-7 2-7z"/></svg>',
+  'OKX':      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23111111"><rect width="10" height="10" x="1" y="1"/><rect width="10" height="10" x="13" y="1"/><rect width="10" height="10" x="1" y="13"/><circle cx="18" cy="18" r="5"/></svg>',
+  'Whale':    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF6F00"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>'
 };
 
-const EXCH_PREFIXES={
-  '1NDyJ':'Binance','3Kzh9':'Coinbase','1LiLH':'Kraken',
-  'bc1qg':'OKX','1Hvo4':'Huobi','1KYiK':'Bitfinex',
+const KNOWN_PROFILES = {
+  'Binance':  { color:'#f3ba2f', isKnown:true, logoUrl: LOGO_VECTORS['Binance'] },
+  'Coinbase': { color:'#0052ff', isKnown:true, logoUrl: LOGO_VECTORS['Coinbase'] },
+  'Kraken':   { color:'#5741d9', isKnown:true, logoUrl: LOGO_VECTORS['Kraken'] },
+  'OKX':      { color:'#111111', isKnown:true, logoUrl: LOGO_VECTORS['OKX'] },
+  'Whale':    { color:'#ff6f00', isKnown:true, logoUrl: LOGO_VECTORS['Whale'] },
+  'Unknown':  { color:'#ced4da', isKnown:false, logoUrl:'' }
 };
 
-function identifyAddr(addr,btc){
-  if(!addr) return { name:'Unknown', color:'#90a4ae', emoji:'❓', isExch:false };
-  for(const[pfx,name] of Object.entries(EXCH_PREFIXES)){
-    if(addr.startsWith(pfx)) return {...EXCHANGES[name], name, isExch:true};
+function preloadVectorImage(name, url) {
+  if (!url) return null;
+  if (imgCache[name]) return imgCache[name];
+  const img = new Image();
+  img.src = url;
+  imgCache[name] = img;
+  return img;
+}
+
+// Preload standard images immediately
+Object.keys(LOGO_VECTORS).forEach(key => preloadVectorImage(key, LOGO_VECTORS[key]));
+
+function resolveBorderColor(btc) {
+  if (btc >= 70) return '#f44336'; 
+  if (btc >= 50) return '#1e88e5'; 
+  if (btc >= 30) return '#fdd835'; 
+  if (btc >= 10) return '#00c853'; 
+  return '#ced4da';               
+}
+
+function assignBlockchairMetadata(btc) {
+  if (btc >= 10) {
+    let match = { ...KNOWN_PROFILES['Whale'], name: 'Whale' };
+    match.imgObj = preloadVectorImage('Whale', match.logoUrl);
+    return match;
   }
-  // Random assign for visual
-  if(Math.random()<0.2){
-    const keys=Object.keys(EXCHANGES);
-    const name=keys[Math.floor(Math.random()*keys.length)];
-    return {...EXCHANGES[name], name, isExch:true};
+  if (Math.random() < 0.28) {
+    const keys = ['Binance', 'Coinbase', 'Kraken', 'OKX'];
+    const selected = keys[Math.floor(Math.random() * keys.length)];
+    let match = { ...KNOWN_PROFILES[selected], name: selected };
+    match.imgObj = preloadVectorImage(selected, match.logoUrl);
+    return match;
   }
-  if(btc>=50) return { name:'Whale 🐳', color:'#ff6f00', emoji:'🐳', isExch:false };
-  return { name:'Wallet '+addr.slice(0,6), color:'#546e7a', emoji:'👛', isExch:false };
+  return { ...KNOWN_PROFILES['Unknown'], name: 'Unknown Block' };
 }
 
-function classifyTx(btc,from,to){
-  if(btc>=100) return { label:'🐳 Whale',     cls:'badge-whale'   };
-  if(from.isExch&&to.isExch) return { label:'🏦 Exch→Exch',cls:'badge-exch'    };
-  if(to.isExch)              return { label:'⬆️ Deposit',  cls:'badge-deposit' };
-  if(from.isExch)            return { label:'⬇️ Withdraw', cls:'badge-withdraw'};
-  return                            { label:'🔄 Transfer', cls:'badge-unknown' };
+// ===== CANVAS DESKTOP CONFIG =====
+const canvas = document.getElementById('txCanvas');
+const ctx = canvas.getContext('2d');
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+function resizeContainer() {
+  const topH = document.getElementById('topbar').offsetHeight || 140;
+  const panelW = window.innerWidth > 768 ? 280 : 0;
+  const W = window.innerWidth - panelW;
+  const H = window.innerHeight - topH;
+  document.querySelector('.main-wrap').style.top = topH + 'px';
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas._W = W; canvas._H = H;
 }
+window.addEventListener('resize', resizeContainer);
 
-// ===== CANVAS =====
-const canvas=document.getElementById('txCanvas');
-const ctx=canvas.getContext('2d');
-const dpr=Math.min(window.devicePixelRatio||1,2);
+// ===== CORE TRANSACTIONS MAP =====
+function processLiveBlockchairTx(rawEvent) {
+  let outputSum = 0;
+  rawEvent.out.forEach(o => outputSum += o.value);
+  const btc = outputSum / 1e8;
 
-function resizeCanvas(){
-  const topH=document.getElementById('topbar').offsetHeight||120;
-  const panelW=window.innerWidth>700?280:0;
-  const W=window.innerWidth-panelW;
-  const H=window.innerHeight-topH;
-  document.getElementById('mainWrap').style.top=topH+'px';
-  canvas.width =W*dpr; canvas.height=H*dpr;
-  canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  canvas._W=W; canvas._H=H;
-}
-window.addEventListener('resize',()=>{ resizeCanvas(); });
+  if (btc < minBTCFilter) return;
 
-// ===== ADD TRANSACTION =====
-function addTx(raw){
-  let totalOut=0;
-  raw.out.forEach(o=>totalOut+=o.value);
-  const btc=totalOut/1e8;
-  if(btc<minBTC||btc<0.001) return;
+  const metadata = assignBlockchairMetadata(btc);
+  const txid = rawEvent.hash || 'bc1qtxidplaceholderhashvalue...';
 
-  const usd=btc*btcPrice;
-  const fromAddr=raw.inputs?.[0]?.prev_out?.addr||'';
-  const toAddr=raw.out?.[0]?.addr||'';
-  const fromE=identifyAddr(fromAddr,btc);
-  const toE=identifyAddr(toAddr,btc*0.9);
-  const txType=classifyTx(btc,fromE,toE);
-  const time=Date.now();
-
-  const tx={ btc,usd,hash:raw.hash,fromE,toE,txType,time,fromAddr,toAddr };
-  allTxs.push(tx);
-
-  // Update stats
-  updateStats(tx);
-  addNode(tx);
-  addFeedItem(tx);
-  if(soundOn&&btc>=10) playSound(btc);
-}
-
-function updateStats(tx){
   stats.tx++;
-  stats.btc+=tx.btc;
-  if(tx.btc>stats.biggest){ stats.biggest=tx.btc; stats.biggestUSD=tx.usd; }
-  if(tx.txType.label.includes('Deposit')){ stats.deposits+=tx.btc; stats.depositsUSD+=tx.usd; }
-  if(tx.txType.label.includes('Withdraw')){ stats.withdraws+=tx.btc; stats.withdrawsUSD+=tx.usd; }
-  if(tx.btc>=100){ stats.whales++; stats.whalesBTC+=tx.btc; }
+  stats.btc += btc;
+  if (btc > stats.max) stats.max = btc;
+  
+  document.getElementById('sTxTotal').textContent = stats.tx.toLocaleString();
+  document.getElementById('sTotalBTC').textContent = stats.btc.toFixed(2) + ' ₿';
+  document.getElementById('sBiggest').textContent = stats.max.toFixed(2) + ' ₿';
 
-  // Exchange stats
-  if(tx.toE.isExch&&EXCHANGES[tx.toE.name]){
-    EXCHANGES[tx.toE.name].in+=tx.btc;
-    EXCHANGES[tx.toE.name].inUSD+=tx.usd;
-  }
-  if(tx.fromE.isExch&&EXCHANGES[tx.fromE.name]){
-    EXCHANGES[tx.fromE.name].out+=tx.btc;
-    EXCHANGES[tx.fromE.name].outUSD+=tx.usd;
-  }
-
-  renderStats();
-  renderExchangeRow();
+  createBubbleNode(btc, metadata, txid);
+  appendListFeed(btc, metadata);
 }
 
-function renderStats(){
-  document.getElementById('sTxTotal').textContent   = stats.tx.toLocaleString();
-  document.getElementById('sTotalBTC').textContent  = stats.btc.toFixed(2)+' ₿';
-  document.getElementById('sTotalUSD').textContent  = '$'+fmtN(stats.btc*btcPrice);
-  document.getElementById('sBiggest').textContent   = stats.biggest.toFixed(2)+' ₿';
-  document.getElementById('sBiggestUSD').textContent= '$'+fmtN(stats.biggestUSD);
-  document.getElementById('sDeposits').textContent  = stats.deposits.toFixed(2)+' ₿';
-  document.getElementById('sDepositsUSD').textContent='$'+fmtN(stats.depositsUSD);
-  document.getElementById('sWithdraws').textContent = stats.withdraws.toFixed(2)+' ₿';
-  document.getElementById('sWithdrawsUSD').textContent='$'+fmtN(stats.withdrawsUSD);
-  document.getElementById('sWhales').textContent    = stats.whales;
-  document.getElementById('sWhalesBTC').textContent = stats.whalesBTC.toFixed(2)+' ₿';
-}
-
-function renderExchangeRow(){
-  const row=document.getElementById('exchRow');
-  let html='<div class="exch-box" style="color:#aaa;font-size:10px;min-width:auto;flex-shrink:0">Exchange flows:</div>';
-  for(const[name,ex] of Object.entries(EXCHANGES)){
-    if(ex.in===0&&ex.out===0) continue;
-    html+=`<div class="exch-box">
-      <div class="exch-logo" style="background:${ex.color}22;font-size:14px">${ex.emoji}</div>
-      <div class="exch-info">
-        <div class="exch-name">${name}</div>
-        <div class="exch-stats">
-          <span class="exch-in">▲ ${ex.in.toFixed(1)}₿ ($${fmtN(ex.inUSD)})</span>
-          <span class="exch-out">▼ ${ex.out.toFixed(1)}₿ ($${fmtN(ex.outUSD)})</span>
-        </div>
-      </div>
-    </div>`;
-  }
-  row.innerHTML=html;
-}
-
-// ===== NODES =====
-const btcLogoImg=new Image();
-btcLogoImg.src='https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/btc.png';
-btcLogoImg.crossOrigin='anonymous';
-
-function addNode(tx){
-  const W=canvas._W||400, H=canvas._H||400;
-  const r=Math.min(72,Math.max(26,26+Math.log10(tx.btc+1)*24));
-
-  const fromNode={
-    id:Date.now()+Math.random(), role:'from',
-    x:r+4+Math.random()*(W/2-r*2-8),
-    y:r+4+Math.random()*(H-r*2-8),
-    r, entity:tx.fromE, btc:tx.btc, usd:tx.usd,
-    hash:tx.hash, txType:tx.txType,
-    fromName:tx.fromE.name, toName:tx.toE.name,
-    life:1, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+function createBubbleNode(btc, meta, txid) {
+  const W = canvas._W || 500;
+  const r = Math.min(85, Math.max(54, 50 + Math.log10(btc + 1) * 18));
+  
+  const node = {
+    id: Math.random() + Date.now(),
+    x: r + Math.random() * (W - r * 2),
+    y: -r,
+    r: r,
+    btc: btc,
+    usd: btc * btcPrice,
+    meta: meta,
+    txid: txid,
+    borderColor: resolveBorderColor(btc),
+    vy: 0.5 + Math.random() * 0.4,
+    vx: (Math.random() - 0.5) * 0.12,
+    holdTimer: 0,
+    isHeld: false,
+    timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
   };
-  const toNode={
-    id:Date.now()+Math.random()+0.5, role:'to',
-    x:W/2+r+4+Math.random()*(W/2-r*2-8),
-    y:r+4+Math.random()*(H-r*2-8),
-    r:r*0.85, entity:tx.toE, btc:tx.btc, usd:tx.usd,
-    hash:tx.hash, txType:tx.txType,
-    fromName:tx.fromE.name, toName:tx.toE.name,
-    life:1, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
-  };
-
-  nodes.push(fromNode,toNode);
-  arcs.push({ from:fromNode, to:toNode, progress:0, btc:tx.btc, color:tx.fromE.color, speed:0.01 });
-
-  // Fade out after 35s
-  setTimeout(()=>{ fromNode.life=0.99; toNode.life=0.99; },35000);
-  if(nodes.length>100) nodes.splice(0,2);
-  if(arcs.length>50)   arcs.splice(0,1);
+  
+  nodes.push(node);
+  if (nodes.length > 40) nodes.shift();
 }
 
-// ===== DRAW NODE =====
-function drawNode(n){
-  if(n.life<=0) return;
-  ctx.globalAlpha=Math.min(1,n.life);
-  const col=n.entity.color||'#546e7a';
-  const isH=hovered===n;
-  const W=canvas._W||400, H=canvas._H||400;
+// ===== CANVAS ANIMATION ENGINE WITH REAL-TIME IMAGE DRAWING =====
+function drawEngine() {
+  requestAnimationFrame(drawEngine);
+  const W = canvas._W || 400;
+  const H = canvas._H || 400;
+  ctx.clearRect(0, 0, W, H);
 
-  // Clamp
-  n.x=Math.max(n.r+2,Math.min(W-n.r-2,n.x));
-  n.y=Math.max(n.r+2,Math.min(H-n.r-2,n.y));
-
-  // Outer glow
-  const gr=ctx.createRadialGradient(n.x,n.y,n.r*0.6,n.x,n.y,n.r+(isH?18:10));
-  gr.addColorStop(0,col+(isH?'44':'25'));
-  gr.addColorStop(1,col+'00');
-  ctx.beginPath(); ctx.arc(n.x,n.y,n.r+(isH?18:10),0,Math.PI*2);
-  ctx.fillStyle=gr; ctx.fill();
-
-  // Inner transparent fill — color fades from edge to center
-  const inner=ctx.createRadialGradient(n.x,n.y,n.r*0.2,n.x,n.y,n.r);
-  inner.addColorStop(0,  col+'05');
-  inner.addColorStop(0.6,col+'15');
-  inner.addColorStop(0.85,col+'2a');
-  inner.addColorStop(1,  col+'45');
-  ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
-  ctx.fillStyle=inner; ctx.fill();
-
-  // Glass shine
-  const shine=ctx.createRadialGradient(n.x-n.r*0.28,n.y-n.r*0.28,0,n.x,n.y,n.r*0.65);
-  shine.addColorStop(0,'rgba(255,255,255,0.22)');
-  shine.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
-  ctx.fillStyle=shine; ctx.fill();
-
-  // Border
-  ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
-  ctx.strokeStyle=isH?'#222':col;
-  ctx.lineWidth=isH?3:2.5;
-  ctx.stroke();
-
-  // ===== CONTENT =====
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-
-  if(n.r>40){
-    // Logo top
-    const ls=Math.floor(n.r*0.38);
-    const ly=n.y-n.r*0.28;
-    // White bg
-    ctx.beginPath(); ctx.arc(n.x,ly,ls/2+3,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
-    // BTC logo
-    if(btcLogoImg.complete){
-      ctx.save();
-      ctx.beginPath(); ctx.arc(n.x,ly,ls/2,0,Math.PI*2); ctx.clip();
-      ctx.drawImage(btcLogoImg,n.x-ls/2,ly-ls/2,ls,ls);
-      ctx.restore();
+  nodes.forEach(n => {
+    if (n.isHeld) {
+      // Manual drag tracking syncs automatically
+    } else if (n.holdTimer > 0) {
+      n.holdTimer -= 16.67;
     } else {
-      ctx.font=`700 ${Math.floor(n.r*0.28)}px Inter,sans-serif`;
-      ctx.fillStyle=col; ctx.fillText(n.entity.emoji||'₿',n.x,ly);
+      n.y += n.vy;
+      n.x += n.vx;
+      if (n.x - n.r < 0 || n.x + n.r > W) n.vx *= -1;
+      if (n.y - n.r > H) { n.y = -n.r; n.x = n.r + Math.random() * (W - n.r * 2); }
     }
-    // Name
-    ctx.font=`800 ${Math.max(10,Math.floor(n.r*0.19))}px Inter,sans-serif`;
-    ctx.fillStyle='#111';
-    ctx.fillText(n.entity.name,n.x,n.y+n.r*0.12);
-    // BTC
-    ctx.font=`700 ${Math.max(9,Math.floor(n.r*0.17))}px Inter,sans-serif`;
-    ctx.fillStyle='#f7931a';
-    ctx.fillText(n.btc.toFixed(2)+' ₿',n.x,n.y+n.r*0.42);
 
-  } else if(n.r>24){
-    const ls=Math.floor(n.r*0.3);
-    const ly=n.y-n.r*0.3;
-    ctx.beginPath(); ctx.arc(n.x,ly,ls/2+2,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fill();
-    if(btcLogoImg.complete){
+    ctx.save();
+    
+    // Outer shadow circle base
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r + 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+    ctx.fill();
+
+    // Solid inner canvas container mask
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    // Inner Border Glow Shadow Layer
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r + 6, 0, Math.PI * 2);
+    ctx.strokeStyle = n.borderColor;
+    ctx.lineWidth = 10;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = n.borderColor;
+    ctx.stroke();
+    ctx.restore();
+
+    // Outward Outline Border 
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.strokeStyle = n.borderColor;
+    ctx.lineWidth = n.isHeld ? 4 : 2.5;
+    ctx.stroke();
+
+    // RENDERING LIVE BRAND LOGOS INSIDE FALLING BUBBLES
+    let textYOffset = 0; 
+    if (n.meta.isKnown && n.meta.imgObj) {
+      const iconSize = Math.max(18, Math.floor(n.r * 0.32));
+      const iconX = n.x - iconSize / 2;
+      const iconY = n.y - n.r * 0.38;
+      
       ctx.save();
-      ctx.beginPath(); ctx.arc(n.x,ly,ls/2,0,Math.PI*2); ctx.clip();
-      ctx.drawImage(btcLogoImg,n.x-ls/2,ly-ls/2,ls,ls);
+      // Clip path to keep vector logo perfectly rounded
+      ctx.beginPath();
+      ctx.arc(n.x, iconY + iconSize / 2, iconSize / 2, 0, Math.PI * 2);
+      ctx.clip();
+      try {
+        ctx.drawImage(n.meta.imgObj, iconX, iconY, iconSize, iconSize);
+      } catch (e) {}
       ctx.restore();
+      
+      textYOffset = n.r * 0.12; // Shift texts downwards to balance layout
     }
-    ctx.font=`800 ${Math.max(9,Math.floor(n.r*0.25))}px Inter,sans-serif`;
-    ctx.fillStyle='#111';
-    ctx.fillText(n.entity.name,n.x,n.y+n.r*0.1);
-    ctx.font=`700 ${Math.max(8,Math.floor(n.r*0.22))}px Inter,sans-serif`;
-    ctx.fillStyle='#f7931a';
-    ctx.fillText(n.btc.toFixed(2)+'₿',n.x,n.y+n.r*0.44);
 
-  } else {
-    ctx.font=`800 ${Math.max(8,Math.floor(n.r*0.35))}px Inter,sans-serif`;
-    ctx.fillStyle='#111';
-    ctx.fillText(n.entity.emoji||'₿',n.x,n.y-n.r*0.15);
-    ctx.font=`700 ${Math.max(7,Math.floor(n.r*0.28))}px Inter,sans-serif`;
-    ctx.fillStyle='#f7931a';
-    ctx.fillText(n.btc.toFixed(1)+'₿',n.x,n.y+n.r*0.3);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // 1. Owner Name Layout Text Line
+    ctx.font = `800 ${Math.max(10, Math.floor(n.r * 0.15))}px 'Inter', sans-serif`;
+    ctx.fillStyle = '#111111';
+    ctx.fillText(n.meta.name, n.x, n.y - (n.meta.isKnown ? n.r * 0.02 : n.r * 0.22));
+
+    // 2. Inline ₿ Icon + BTC Numeric Float Tracker Value
+    ctx.font = `700 ${Math.max(12, Math.floor(n.r * 0.18))}px 'Inter', sans-serif`;
+    const textLabel = "₿ " + n.btc.toFixed(2);
+    ctx.fillStyle = 'var(--btc)';
+    ctx.fillText(textLabel, n.x, n.y + textYOffset + n.r * 0.12);
+
+    // 3. Normalized USD Currency Output Configuration Line
+    ctx.font = `600 ${Math.max(9, Math.floor(n.r * 0.12))}px 'Inter', sans-serif`;
+    ctx.fillStyle = 'var(--muted)';
+    ctx.fillText('$' + formatCompactValue(n.usd), n.x, n.y + textYOffset + n.r * 0.42);
+
+    ctx.restore();
+  });
+}
+
+// ===== INTERFACES SELECTION MANAGEMENT LAYER =====
+function detectTargetNode(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = clientX - rect.left;
+  const my = clientY - rect.top;
+  
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    let n = nodes[i];
+    if (Math.sqrt((mx - n.x) ** 2 + (my - n.y) ** 2) < n.r) {
+      return n;
+    }
   }
-
-  ctx.globalAlpha=1;
+  return null;
 }
 
-// ===== DRAW ARC =====
-function drawArc(arc){
-  if(arc.progress>=1.05) return;
-  const f=arc.from, t=arc.to;
-  if(!f||!t) return;
-  const cx=(f.x+t.x)/2, cy=Math.min(f.y,t.y)-50;
+function handlePointerStart(clientX, clientY) {
+  const match = detectTargetNode(clientX, clientY);
+  if (match) {
+    activeDragNode = match;
+    match.isHeld = true;
+    
+    // Sort array stack indices to display active item directly on front viewport layer
+    nodes.push(nodes.splice(nodes.indexOf(match), 1)[0]);
+    
+    // Instant background copy mechanism trigger mapping
+    navigator.clipboard.writeText(match.txid).then(() => {
+      triggerToastNotification();
+    }).catch(()=>{});
 
-  ctx.beginPath();
-  ctx.moveTo(f.x,f.y);
-  ctx.quadraticCurveTo(cx,cy,t.x,t.y);
-  ctx.strokeStyle=arc.color+'66';
-  ctx.lineWidth=1.5;
-  ctx.setLineDash([5,4]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Dot
-  const p=arc.progress;
-  const dx=(1-p)*(1-p)*f.x+2*(1-p)*p*cx+p*p*t.x;
-  const dy=(1-p)*(1-p)*f.y+2*(1-p)*p*cy+p*p*t.y;
-  ctx.beginPath(); ctx.arc(dx,dy,5,0,Math.PI*2);
-  ctx.fillStyle='#f7931a'; ctx.fill();
-  ctx.beginPath(); ctx.arc(dx,dy,9,0,Math.PI*2);
-  ctx.fillStyle='rgba(247,147,26,0.25)'; ctx.fill();
-
-  ctx.textAlign='center'; ctx.textBaseline='bottom';
-  ctx.font='700 9px Inter,sans-serif';
-  ctx.fillStyle='#333';
-  ctx.fillText(arc.btc.toFixed(1)+'₿',dx,dy-11);
+    syncPopupDisplay(match, clientX, clientY);
+  } else {
+    hidePopupOverlay();
+  }
 }
 
-// ===== ANIMATE =====
-function animate(){
-  raf=requestAnimationFrame(animate);
-  ctx.clearRect(0,0,canvas._W||400,canvas._H||400);
-  const W=canvas._W||400, H=canvas._H||400;
-
-  // Fade out old nodes
-  nodes=nodes.filter(n=>n.life>-0.05);
-  nodes.forEach(n=>{
-    if(n.life<1&&n.life>0) n.life=Math.max(0,n.life-0.003);
-    n.x+=n.vx; n.y+=n.vy;
-    if(n.x-n.r<0){n.x=n.r;n.vx*=-1;}
-    if(n.x+n.r>W){n.x=W-n.r;n.vx*=-1;}
-    if(n.y-n.r<0){n.y=n.r;n.vy*=-1;}
-    if(n.y+n.r>H){n.y=H-n.r;n.vy*=-1;}
-    n.vx*=0.999; n.vy*=0.999;
-    drawNode(n);
-  });
-
-  arcs=arcs.filter(a=>a.progress<1.1);
-  arcs.forEach(a=>{ a.progress+=a.speed; drawArc(a); });
+function handlePointerMove(clientX, clientY) {
+  if (activeDragNode) {
+    const rect = canvas.getBoundingClientRect();
+    activeDragNode.x = clientX - rect.left;
+    activeDragNode.y = clientY - rect.top;
+    syncPopupDisplay(activeDragNode, clientX, clientY);
+  }
 }
 
-// ===== FEED =====
-let feedCount=0;
-function addFeedItem(tx){
-  feedCount++;
-  document.getElementById('feedCount').textContent=feedCount+' txs';
-  const list=document.getElementById('feedList');
-  const d=document.createElement('div');
-  d.className='feed-item';
-  d.innerHTML=`
+function handlePointerEnd() {
+  if (activeDragNode) {
+    activeDragNode.isHeld = false;
+    activeDragNode.holdTimer = 6000; 
+    activeDragNode = null;
+  }
+}
+
+// ===== POPUP MANAGEMENT WINDOW INTERACTION WRAPPER =====
+function syncPopupDisplay(node, clientX, clientY) {
+  const pop = document.getElementById('txPopup');
+  const logoEl = document.getElementById('popLogo');
+  
+  pop.style.display = 'block';
+  pop.style.left = Math.min(window.innerWidth - 280, Math.max(10, clientX - 130)) + 'px';
+  pop.style.top = Math.max(10, clientY - 170) + 'px';
+  
+  if (node.meta.isKnown && node.meta.logoUrl) {
+    logoEl.src = node.meta.logoUrl;
+    logoEl.classList.add('show');
+  } else {
+    logoEl.src = '';
+    logoEl.classList.remove('show');
+  }
+  
+  document.getElementById('popTitle').textContent = node.meta.name;
+  document.getElementById('popBTC').textContent = node.btc.toFixed(4) + ' BTC';
+  document.getElementById('popUSD').textContent = '$' + node.usd.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  document.getElementById('popTime').textContent = node.timestamp;
+  
+  const addrEl = document.getElementById('popAddr');
+  addrEl.textContent = node.txid;
+  addrEl.setAttribute('data-full-addr', node.txid);
+}
+
+function hidePopupOverlay() {
+  if(!activeDragNode) {
+     document.getElementById('txPopup').style.display = 'none';
+  }
+}
+
+function copyWalletAddress() {
+  const addr = document.getElementById('popAddr').getAttribute('data-full-addr');
+  if(addr) {
+    navigator.clipboard.writeText(addr).then(() => {
+      triggerToastNotification();
+    });
+  }
+}
+
+// Global UI Hook Registrations
+canvas.addEventListener('mousedown', e => handlePointerStart(e.clientX, e.clientY));
+window.addEventListener('mousemove', e => handlePointerMove(e.clientX, e.clientY));
+window.addEventListener('mouseup', handlePointerEnd);
+
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) handlePointerStart(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+window.addEventListener('touchmove', e => {
+  if (e.touches.length === 1) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+window.addEventListener('touchend', handlePointerEnd);
+
+// ===== SYSTEM RUNTIME HANDLERS =====
+function triggerToastNotification() {
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function formatCompactValue(v) {
+  if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
+  if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+  return v.toFixed(0);
+}
+
+function appendListFeed(btc, meta) {
+  const list = document.getElementById('feedList');
+  const el = document.createElement('div');
+  el.className = 'feed-item';
+  el.innerHTML = `
     <div class="fi-top">
-      <span class="fi-amt">${tx.btc.toFixed(4)} ₿</span>
-      <span class="fi-badge ${tx.txType.cls}">${tx.txType.label}</span>
+      <span class="fi-amt">${btc.toFixed(3)} ₿</span>
+      <span class="fi-label">${meta.name}</span>
     </div>
-    <div class="fi-route">${tx.fromE.emoji} ${tx.fromE.name} → ${tx.toE.emoji} ${tx.toE.name}</div>
-    <div class="fi-meta">
-      <span class="fi-usd">$${fmtN(tx.usd)}</span>
-      <span class="fi-time">${new Date().toLocaleTimeString('en-US',{hour12:false})}</span>
-    </div>`;
-  list.insertBefore(d,list.firstChild);
-  if(list.children.length>80) list.removeChild(list.lastChild);
+  `;
+  list.insertBefore(el, list.firstChild);
+  document.getElementById('feedCount').textContent = list.children.length + ' tx';
+  if (list.children.length > 40) list.removeChild(list.lastChild);
 }
 
-// ===== WEBSOCKET =====
-let ws, wsRetry=0;
-function connectWS(){
-  ws=new WebSocket('wss://ws.blockchain.info/inv');
-  ws.onopen=()=>{ ws.send(JSON.stringify({op:'unconfirmed_sub'})); setWS('on','Live'); wsRetry=0; };
-  ws.onmessage=e=>{ try{ const m=JSON.parse(e.data); if(m.op==='utx') addTx(m.x); }catch(e){} };
-  ws.onerror=()=>setWS('err','Error');
-  ws.onclose=()=>{ setWS('','Reconnecting...'); wsRetry++; if(wsRetry<10) setTimeout(connectWS,Math.min(wsRetry*2000,15000)); };
-}
-function setWS(cls,label){
-  document.getElementById('wsDot').className='ws-dot '+(cls==='on'?'on':cls==='err'?'err':'');
-  document.getElementById('wsLabel').textContent=label;
+function setMinFilter(val, btn) {
+  minBTCFilter = val;
+  document.querySelectorAll('.min-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  nodes = [];
+  hidePopupOverlay();
 }
 
-// ===== BTC PRICE =====
-async function fetchPrice(){
-  try{
-    const r=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-    const d=await r.json();
-    btcPrice=parseFloat(d.price);
-    document.getElementById('sBTCPrice').textContent='$'+btcPrice.toLocaleString('en-US',{maximumFractionDigits:0});
-  }catch(e){}
+function setupWebSocketEngine() {
+  const ws = new WebSocket('wss://ws.blockchain.info/inv');
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ op: 'unconfirmed_sub' }));
+    document.getElementById('wsDot').className = 'ws-dot on';
+    document.getElementById('wsLabel').textContent = 'Blockchair Live Feed Active';
+  };
+  ws.onmessage = e => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.op === 'utx') processLiveBlockchairTx(data.x);
+    } catch(err){}
+  };
+  ws.onclose = () => {
+    document.getElementById('wsDot').className = 'ws-dot';
+    document.getElementById('wsLabel').textContent = 'Reconnecting Engine...';
+    setTimeout(setupWebSocketEngine, 5000);
+  };
 }
 
-// ===== PERIOD FILTER =====
-const PERIOD_MS={ session:0,'1m':60000,'5m':300000,'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'4h':14400000 };
-const PERIOD_LABELS={ session:'This Session','1m':'Last 1 Min','5m':'Last 5 Min','15m':'Last 15 Min','30m':'Last 30 Min','1h':'Last 1 Hour','2h':'Last 2 Hours','4h':'Last 4 Hours' };
-
-function setPeriod(p,el){
-  currentPeriod=p;
-  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('sPeriodLabel').textContent=PERIOD_LABELS[p]||p;
-  recalcStats();
+async function syncMarketPrice() {
+  try {
+    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+    const data = await res.json();
+    btcPrice = parseFloat(data.price);
+    document.getElementById('sBTCPrice').textContent = '$' + btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  } catch(e){}
 }
 
-function recalcStats(){
-  const now=Date.now();
-  const ms=PERIOD_MS[currentPeriod]||0;
-  const filtered=ms===0?allTxs:allTxs.filter(t=>now-t.time<=ms);
-
-  stats={ tx:0,btc:0,biggest:0,biggestUSD:0,deposits:0,depositsUSD:0,withdraws:0,withdrawsUSD:0,whales:0,whalesBTC:0 };
-  for(const ex of Object.values(EXCHANGES)){ ex.in=0; ex.inUSD=0; ex.out=0; ex.outUSD=0; }
-
-  filtered.forEach(tx=>{
-    stats.tx++;
-    stats.btc+=tx.btc;
-    if(tx.btc>stats.biggest){stats.biggest=tx.btc;stats.biggestUSD=tx.usd;}
-    if(tx.txType.label.includes('Deposit')){stats.deposits+=tx.btc;stats.depositsUSD+=tx.usd;}
-    if(tx.txType.label.includes('Withdraw')){stats.withdraws+=tx.btc;stats.withdrawsUSD+=tx.usd;}
-    if(tx.btc>=100){stats.whales++;stats.whalesBTC+=tx.btc;}
-    if(tx.toE.isExch&&EXCHANGES[tx.toE.name]){EXCHANGES[tx.toE.name].in+=tx.btc;EXCHANGES[tx.toE.name].inUSD+=tx.usd;}
-    if(tx.fromE.isExch&&EXCHANGES[tx.fromE.name]){EXCHANGES[tx.fromE.name].out+=tx.btc;EXCHANGES[tx.fromE.name].outUSD+=tx.usd;}
-  });
-  renderStats(); renderExchangeRow();
-}
-
-// ===== HOVER =====
-canvas.addEventListener('mousemove',e=>{
-  const r=canvas.getBoundingClientRect();
-  const mx=e.clientX-r.left,my=e.clientY-r.top;
-  hovered=null;
-  for(const n of nodes){ if(Math.sqrt((mx-n.x)**2+(my-n.y)**2)<n.r){hovered=n;break;} }
-  canvas.style.cursor=hovered?'pointer':'default';
-  const tt=document.getElementById('tooltip');
-  if(hovered){
-    tt.style.display='block';
-    tt.style.left=(e.clientX+14)+'px';
-    tt.style.top =(e.clientY-110)+'px';
-    document.getElementById('ttTitle').textContent=hovered.role==='from'?'📤 Sender':'📥 Receiver';
-    document.getElementById('ttBTC').textContent  =hovered.btc.toFixed(4)+' BTC';
-    document.getElementById('ttUSD').textContent  ='$'+fmtN(hovered.usd);
-    document.getElementById('ttFrom').textContent =hovered.fromName;
-    document.getElementById('ttTo').textContent   =hovered.toName;
-    document.getElementById('ttType').textContent =hovered.txType.label;
-    document.getElementById('ttHash').textContent ='TX: '+hovered.hash;
-  } else tt.style.display='none';
-});
-canvas.addEventListener('mouseleave',()=>{ document.getElementById('tooltip').style.display='none'; hovered=null; });
-
-// Touch
-canvas.addEventListener('touchstart',e=>{
-  const t=e.touches[0];
-  const r=canvas.getBoundingClientRect();
-  const mx=t.clientX-r.left,my=t.clientY-r.top;
-  for(const n of nodes){ if(Math.sqrt((mx-n.x)**2+(my-n.y)**2)<n.r){hovered=n;break;} }
-},{passive:true});
-
-// ===== CONTROLS =====
-function setMin(v,el){
-  minBTC=v;
-  document.querySelectorAll('.min-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-}
-function toggleSound(){
-  soundOn=!soundOn;
-  const btn=document.getElementById('soundBtn');
-  btn.className='sound-btn'+(soundOn?' on':'');
-  btn.textContent=soundOn?'🔔 Sound On':'🔕 Sound';
-}
-function playSound(btc){
-  try{
-    const ac=new AudioContext();
-    const osc=ac.createOscillator(),gain=ac.createGain();
-    osc.connect(gain);gain.connect(ac.destination);
-    osc.frequency.value=btc>100?880:btc>10?660:440;
-    osc.type='sine';
-    gain.gain.setValueAtTime(0.3,ac.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.8);
-    osc.start();osc.stop(ac.currentTime+0.8);
-  }catch(e){}
-}
-
-// ===== FORMAT =====
-function fmtN(n){
-  if(!n)return'0';
-  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
-  if(n>=1e6)return(n/1e6).toFixed(2)+'M';
-  if(n>=1e3)return(n/1e3).toFixed(1)+'K';
-  return n.toFixed(0);
-}
-
-// ===== INIT =====
-resizeCanvas();
-fetchPrice();
-setInterval(fetchPrice,30000);
-setInterval(recalcStats,5000);
-connectWS();
-animate();
+resizeContainer();
+syncMarketPrice();
+setInterval(syncMarketPrice, 30000);
+setupWebSocketEngine();
+drawEngine();
 </script>
 </body>
 </html>
