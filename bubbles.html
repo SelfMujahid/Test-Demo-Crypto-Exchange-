@@ -291,36 +291,59 @@ function dist(a,b){ const dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); 
 
 // ===== COLOR =====
 function bubbleColor(v) {
-  if (v >  10) return {fill:'#1b5e20', border:'#43a047'};
-  if (v >   5) return {fill:'#2e7d32', border:'#66bb6a'};
-  if (v >   2) return {fill:'#388e3c', border:'#81c784'};
-  if (v >   0) return {fill:'#00695c', border:'#26a69a'};
-  if (v > - 2) return {fill:'#757575', border:'#bdbdbd'};
-  if (v > - 5) return {fill:'#c62828', border:'#ef5350'};
-  if (v > -10) return {fill:'#b71c1c', border:'#ef5350'};
-  return               {fill:'#7f0000', border:'#d32f2f'};
+  // Agar values load nahi huin ya zero hain toh neutral grey return karein
+  if (!v && v !== 0) return { fill: '#757575', border: '#bdbdbd' };
+
+  // Pure list mein se max gain aur max loss dhoondain ranges set karne ke liye
+  const absChanges = allCoins.map(c => c[currentTF] || 0);
+  const maxGain = Math.max(...absChanges, 0.1);
+  const maxLoss = Math.abs(Math.min(...absChanges, -0.1));
+
+  if (v >= 0) {
+    // GREEN SIDE: Kitna % bada gain hai? (0 se 1 ke darmian value)
+    const intensity = maxGain > 0 ? Math.min(v / maxGain, 1) : 0;
+    
+    // Lightness ko intensity ke mutabik adjust karein (jitna zyada gain, utna bright green)
+    // 30% full bright green hai, 75% halka green hai
+    const lightness = 75 - (intensity * 45); 
+    
+    return {
+      fill: `hsl(135, 75%, ${lightness + 10}%)`,
+      border: `hsl(135, 80%, ${lightness}%)`
+    };
+  } else {
+    // RED SIDE: Kitna % bada loss hai?
+    const absV = Math.abs(v);
+    const intensity = maxLoss > 0 ? Math.min(absV / maxLoss, 1) : 0;
+    
+    // Jitter kam hone par dark/faded red, zyada loss par full bright red (35%)
+    const lightness = 75 - (intensity * 40);
+    
+    return {
+      fill: `hsl(0, 75%, ${lightness + 10}%)`,
+      border: `hsl(0, 80%, ${lightness}%)`
+    };
+  }
 }
 
 // ===== DRAW =====
 function drawBubble(b) {
   const chg = b[currentTF];
-  const col = bubbleColor(chg);
+  const col = bubbleColor(chg); // Dynamic color mila
   const isH = hovered===b;
 
-  const rgb = chg>=0 ? '0,168,70' : '229,57,53';
-
-  // 1. Inner fill — transparent with color shade from border inward
+  // 1. Inner fill — Dynamic border color ka hi transparent block bany ga
   ctx.save();
   ctx.beginPath();
   ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
   ctx.clip();
 
-  // Inner radial — color strong at edges, fades to transparent center
+  // Ab static RGB ke bajaye seedha border ka dynamic color background par transparently base karega
   const innerGrad = ctx.createRadialGradient(b.x, b.y, b.r*0.3, b.x, b.y, b.r);
-  innerGrad.addColorStop(0,   `rgba(${rgb}, 0.0)`);
-  innerGrad.addColorStop(0.65,`rgba(${rgb}, 0.06)`);
-  innerGrad.addColorStop(0.85,`rgba(${rgb}, 0.18)`);
-  innerGrad.addColorStop(1.0, `rgba(${rgb}, 0.32)`);
+  innerGrad.addColorStop(0,   'rgba(255,255,255,0.0)');
+  innerGrad.addColorStop(0.65, col.border.replace('hsl', 'hsla').replace(')', ', 0.32)'));
+  innerGrad.addColorStop(0.85, col.border.replace('hsl', 'hsla').replace(')', ', 0.52)'));
+  innerGrad.addColorStop(1.0,  col.border.replace('hsl', 'hsla').replace(')', ', 0.9)'));
   ctx.fillStyle = innerGrad;
   ctx.fillRect(b.x-b.r, b.y-b.r, b.r*2, b.r*2);
 
