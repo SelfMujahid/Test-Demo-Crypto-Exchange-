@@ -56,7 +56,7 @@
   .tt-lbl { color:#888; }
   .tt-val { font-weight:700; }
   .up { color:#00c853; } .dn { color:#f44336; }
-  
+
   .load-screen {
     position:fixed; inset:0; z-index:300;
     background:#f0f2f5;
@@ -208,7 +208,7 @@ function buildBubbles() {
   // Grid calculation ko handle karne ke liye pehle columns aur rows nikalain
   const cols = Math.round(Math.sqrt(count * W / H)) || 1;
   const rows = Math.ceil(count / cols) || 1;
-  
+
   // Exact cell dimensions jo screen par fit aayin
   const cellW = W / cols;
   const cellH = H / rows;
@@ -217,13 +217,13 @@ function buildBubbles() {
   bubbles = coins.map((c, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    
+
     // Jitter barha diya taake line system khatam ho aur natural look aaye
     const jx = (Math.random() - 0.5) * cellW * 0.85;
     const jy = (Math.random() - 0.5) * cellH * 0.85;
-    
+
     const r = minR + Math.pow(c.vol/maxVol, 0.42) * (maxR - minR);
-    
+
     // `0,0` ke bajaye direct absolute centered coordinates pehle hi define kar diye
     let initialX = cellW * col + cellW / 2 + jx;
     let initialY = cellH * row + cellH / 2 + jy;
@@ -276,7 +276,7 @@ function bubbleColor(v, isDragging = false) {
 
     // Agar bubble active/dragging hai toh background gray aur border pure white ho jaye
   if (isDragging) {
-    return { fill: '#e0e0e0', border: '#ffffff' }; // Dono (Gain/Loss) ke liye background gray aur border pure white
+    return { fill: '#ff0000', border: '#5f5f5f' }; // Dono (Gain/Loss) ke liye background gray aur border pure white
   }
 
   // Baqi saare aam bubbles ke liye wahi normal dynamic scale chalay ga
@@ -318,28 +318,44 @@ function drawBubble(b) {
 
    // FIX: Agar drag ho raha hai toh background ko solid gray karo aur border ke andar white inner shadow lagao
   if (isActive) {
-    ctx.fillStyle = '#e0e0e0';
-    ctx.fill();
 
-    // Inner shadow configuration (Sirf andar ki taraf glow karega)
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = '#ffffff';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 4;
-    ctx.stroke(); // Yeh stroke clip ke andar hai, isliye shadow sirf andar banega
-    
-    // Shadow reset taake baqi elements kharab na hon
-    ctx.shadowBlur = 0;
-  }
+  // Base fill
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+
+  // Powerful inner white glow
+  const glow = ctx.createRadialGradient(
+    b.x,
+    b.y,
+    b.r * 0.45,
+    b.x,
+    b.y,
+    b.r
+  );
+
+  glow.addColorStop(0, 'rgba(255,255,255,0)');
+  glow.addColorStop(0.55, 'rgba(255,255,255,0)');
+  glow.addColorStop(0.78, 'rgba(255,255,255,0.55)');
+  glow.addColorStop(0.92, 'rgba(255,255,255,0.95)');
+  glow.addColorStop(1, 'rgba(255,255,255,1)');
+
+  ctx.fillStyle = glow;
+  ctx.fillRect(
+    b.x - b.r,
+    b.y - b.r,
+    b.r * 2,
+    b.r * 2
+  );
+}
 
   // Ab static RGB ke bajaye seedha border ka dynamic color background par transparently base karega
   const innerGrad = ctx.createRadialGradient(b.x, b.y, b.r*0.3, b.x, b.y, b.r);
 
   // Agar drag ho raha hai toh gradient ko solid rakhein warna normal glass effect dein
-  innerGrad.addColorStop(0,   isActive ? '#e0e0e0' : 'rgba(255,255,255,0.0)');
+  innerGrad.addColorStop(0,   isActive ? '#FFFFFF' : 'rgba(255,255,255,0.0)');
   innerGrad.addColorStop(0.65, isActive ? '#e0e0e0' : col.border.replace('hsl', 'hsla').replace(')', ', 0.08)'));
-  innerGrad.addColorStop(0.85, isActive ? '#e0e0e0' : col.border.replace('hsl', 'hsla').replace(')', ', 0.22)'));
-  innerGrad.addColorStop(1.0,  isActive ? '#e0e0e0' : col.border.replace('hsl', 'hsla').replace(')', ', 0.40)'));
+  innerGrad.addColorStop(0.85, isActive ? '#ffffff' : col.border.replace('hsl', 'hsla').replace(')', ', 0.22)'));
+  innerGrad.addColorStop(1.0,  isActive ? '#f5f5f5' : col.border.replace('hsl', 'hsla').replace(')', ', 0.40)'));
   ctx.fillStyle = innerGrad;
   ctx.fillRect(b.x-b.r, b.y-b.r, b.r*2, b.r*2);
 
@@ -359,9 +375,24 @@ function drawBubble(b) {
   ctx.beginPath();
   ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
   // Hamesha original dynamic red/green color uthaye ga bina black shading ke
-  ctx.strokeStyle = col.border; 
-  ctx.lineWidth   = isActive ? 3.5 : 2; // Active hone par border thick aur prominent ho jaye
-  ctx.stroke();
+  if (isActive) {
+
+  ctx.shadowBlur = 25;
+  ctx.shadowColor = '#ffffff';
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 5;
+
+} else {
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = col.border;
+  ctx.lineWidth = 2;
+
+}
+
+ctx.stroke();
+ctx.shadowBlur = 0;
 
   // ===== TEXT =====
   ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -469,10 +500,10 @@ function animate(){
 
   const W = canvas._W || canvas.width;
   const H = canvas._H || canvas.height;
-  
+
   bubbles.forEach(b=>{
     b.x+=b.vx; b.y+=b.vy;
-    
+
     // Wall collisions
     if(b.x-b.r<0){b.x=b.r;b.vx*=-1;}
     if(b.x+b.r>W){b.x=W-b.r;b.vx*=-1;}
@@ -488,13 +519,13 @@ function animate(){
       if(d<min&&d>0){
         const push=0.005; // Isay 0.02 se kam kar ke 0.005 kiya taake bubbles aik doosre ko jhatka na marein
         b.vx-=(dx/d)*push; b.vy-=(dy/d)*push;
-        
+
         // Speed limit ko tight kiya taake bubbles apni grid position ke aas paas hi rahein
         b.vx=Math.max(-0.05,Math.min(0.05,b.vx));
         b.vy=Math.max(-0.05,Math.min(0.05,b.vy));
       }
     });
-    
+
     // Friction force — Taake halki movement ke baad bubbles wapis stable ho jayein
     b.vx *= 0.98;
     b.vy *= 0.98;
@@ -571,7 +602,7 @@ canvas.addEventListener('touchstart', e=>{
   const t=e.touches[0];
   const r=canvas.getBoundingClientRect();
   const tx=t.clientX-r.left, ty=t.clientY-r.top;
-  
+
   dragging = null; 
   hovered = null;
 
@@ -590,10 +621,10 @@ canvas.addEventListener('touchstart', e=>{
 canvas.addEventListener('touchmove', e=>{
   e.preventDefault();
   if(!dragging) return;
-  
+
   // FIX: Touch move ke dauran bhi isay hovered rakhein taake yeh hamesha top layer par rahe
   hovered = dragging; 
-  
+
   const t=e.touches[0];
   const r=canvas.getBoundingClientRect();
   dragging.x = t.clientX - r.left - dragOffX;
@@ -609,10 +640,10 @@ canvas.addEventListener('touchend', e=>{
   if(dragging){
     dragging.vx = (Math.random()-0.5)*0.15;
     dragging.vy = (Math.random()-0.5)*0.15;
-    
+
     // FIX: Purana koi chal raha timer clear karein
     if(dragTimeout) clearTimeout(dragTimeout);
-    
+
     // Is bubble ko lastDragged ghoshit karein taake yeh active state mein rahe
     lastDragged = dragging; 
     dragging = null;
