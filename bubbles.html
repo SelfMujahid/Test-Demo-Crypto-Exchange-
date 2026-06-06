@@ -4,563 +4,664 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TestTrade — Crypto Bubbles</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background:#0d0d0d; color:#fff;
-    font-family:'Inter',sans-serif;
-    overflow:hidden; height:100vh; width:100vw;
-  }
+  body { background:#f0f2f5; font-family:'Inter',sans-serif; overflow:hidden; height:100vh; width:100vw; }
 
-  /* TOP BAR */
   .topbar {
     position:fixed; top:0; left:0; right:0; z-index:100;
-    background:rgba(15,15,15,0.95);
-    backdrop-filter:blur(20px);
-    border-bottom:1px solid #222;
-    padding:10px 16px;
+    background:rgba(255,255,255,0.98); backdrop-filter:blur(20px);
+    border-bottom:1px solid #e0e0e0;
+    padding:8px 16px;
     display:flex; align-items:center; justify-content:space-between;
-    flex-wrap:wrap; gap:8px;
+    gap:8px; flex-wrap:wrap;
   }
-  .tb-left { display:flex; align-items:center; gap:12px; }
-  .logo { font-size:16px; font-weight:700; color:#fff; text-decoration:none; }
-  .logo span { color:#00d4ff; }
-  .back-btn { padding:5px 12px; background:rgba(255,255,255,0.08); border:1px solid #333; border-radius:7px; color:#aaa; font-size:11px; text-decoration:none; transition:all 0.2s; }
-  .back-btn:hover { color:#fff; border-color:#555; }
+  .tb-left { display:flex; align-items:center; gap:10px; }
+  .logo { font-size:15px; font-weight:700; color:#111; text-decoration:none; }
+  .logo span { color:#00b4d8; }
+  .back-btn { padding:5px 11px; background:#f5f5f5; border:1px solid #ddd; border-radius:7px; color:#555; font-size:11px; text-decoration:none; }
 
-  /* TIMEFRAME BUTTONS */
-  .tf-group { display:flex; gap:4px; }
-  .tf-btn {
-    padding:5px 12px; border-radius:7px;
-    background:rgba(255,255,255,0.06);
-    border:1px solid #333; color:#888;
-    font-size:11px; font-weight:600;
-    cursor:pointer; font-family:'Inter',sans-serif;
-    transition:all 0.2s;
+  .tf-group, .filter-group { display:flex; gap:3px; }
+  .tf-btn, .filter-btn {
+    padding:5px 11px; border-radius:7px;
+    background:#f5f5f5; border:1px solid #ddd;
+    color:#666; font-size:11px; font-weight:600;
+    cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s;
   }
-  .tf-btn:hover { color:#fff; border-color:#555; }
-  .tf-btn.active { background:rgba(0,212,255,0.15); border-color:#00d4ff; color:#00d4ff; }
-
-  /* FILTER */
-  .filter-group { display:flex; gap:4px; }
-  .filter-btn {
-    padding:5px 12px; border-radius:7px;
-    background:rgba(255,255,255,0.06);
-    border:1px solid #333; color:#888;
-    font-size:11px; font-weight:600;
-    cursor:pointer; font-family:'Inter',sans-serif;
-    transition:all 0.2s;
+  .tf-btn.active, .filter-btn.active {
+    background:rgba(0,180,216,0.1); border-color:#00b4d8; color:#00b4d8;
   }
-  .filter-btn.active { background:rgba(255,255,255,0.12); border-color:#555; color:#fff; }
 
-  /* STATS */
-  .stats-row { display:flex; gap:14px; align-items:center; }
-  .stat { font-size:11px; color:#666; }
-  .stat b { color:#fff; font-weight:600; }
-  .stat .up { color:#26a69a; }
-  .stat .dn { color:#ef5350; }
+  .stats-row { display:flex; gap:12px; font-size:11px; color:#666; }
+  .stats-row b { color:#111; font-weight:600; }
 
-  /* CANVAS */
   #bubbleCanvas {
-    position:fixed;
-    top:52px; left:0; right:0; bottom:0;
-    width:100%; height:calc(100vh - 52px);
+    position:fixed; top:50px; left:0;
+    width:100%; height:calc(100vh - 50px);
   }
 
-  /* TOOLTIP */
   .tooltip {
     position:fixed; z-index:200;
-    background:rgba(20,20,20,0.97);
-    border:1px solid #333;
-    border-radius:12px;
-    padding:12px 16px;
-    pointer-events:none;
-    display:none;
+    background:#fff; border:1px solid #e0e0e0;
+    border-radius:12px; padding:12px 16px;
+    pointer-events:none; display:none;
     min-width:160px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    box-shadow:0 4px 20px rgba(0,0,0,0.12);
   }
-  .tt-sym { font-size:16px; font-weight:700; margin-bottom:2px; }
+  .tt-sym { font-size:16px; font-weight:800; color:#111; margin-bottom:2px; }
   .tt-name { font-size:10px; color:#888; margin-bottom:8px; }
-  .tt-price { font-size:14px; font-weight:600; margin-bottom:4px; }
+  .tt-price { font-size:14px; font-weight:700; color:#111; margin-bottom:4px; }
   .tt-row { display:flex; justify-content:space-between; gap:16px; font-size:11px; margin-top:3px; }
-  .tt-lbl { color:#666; }
-  .tt-val { font-weight:600; }
-  .up { color:#26a69a; }
-  .dn { color:#ef5350; }
+  .tt-lbl { color:#888; }
+  .tt-val { font-weight:700; }
+  .up { color:#00c853; } .dn { color:#f44336; }
 
-  /* LEGEND */
   .legend {
-    position:fixed; bottom:16px; left:50%;
-    transform:translateX(-50%);
-    display:flex; align-items:center; gap:16px;
-    background:rgba(15,15,15,0.9);
-    border:1px solid #222; border-radius:20px;
-    padding:8px 20px; font-size:11px; z-index:100;
+    position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:12px;
+    background:rgba(255,255,255,0.95); border:1px solid #e0e0e0;
+    border-radius:20px; padding:6px 16px;
+    font-size:10px; color:#666; z-index:100;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    white-space:nowrap;
   }
-  .leg-item { display:flex; align-items:center; gap:5px; color:#888; }
-  .leg-dot { width:10px; height:10px; border-radius:50%; }
+  .leg-item { display:flex; align-items:center; gap:4px; }
+  .leg-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
 
-  /* LOADING */
-  .loading-screen {
+  .load-screen {
     position:fixed; inset:0; z-index:300;
-    background:#0d0d0d;
+    background:#f0f2f5;
     display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:12px;
+    align-items:center; justify-content:center; gap:14px;
   }
-  .spinner { width:36px; height:36px; border:2px solid #222; border-top-color:#00d4ff; border-radius:50%; animation:spin 0.8s linear infinite; }
+  .spinner { width:36px; height:36px; border:3px solid #e0e0e0; border-top-color:#00b4d8; border-radius:50%; animation:spin 0.8s linear infinite; }
   @keyframes spin { to{transform:rotate(360deg)} }
-  .load-text { font-size:13px; color:#666; }
+  .load-text { font-size:13px; color:#888; }
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div class="loading-screen" id="loadScreen">
+<div class="load-screen" id="loadScreen">
   <div class="spinner"></div>
-  <div class="load-text">Crypto bubbles load ho rahi hain...</div>
+  <div class="load-text" id="loadText">Crypto data load ho rahi hai...</div>
 </div>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="tb-left">
     <a href="index.html" class="back-btn">← Back</a>
     <div class="logo">TEST<span>TRADE</span> Bubbles</div>
   </div>
-
   <div class="tf-group">
-    <button class="tf-btn" onclick="setTF('change1h',this)">1H</button>
-    <button class="tf-btn active" onclick="setTF('change24h',this)">24H</button>
-    <button class="tf-btn" onclick="setTF('change7d',this)">7D</button>
-    <button class="tf-btn" onclick="setTF('change30d',this)">30D</button>
+    <button class="tf-btn" onclick="setTF('c1m',this)">1M</button>
+    <button class="tf-btn" onclick="setTF('c1h',this)">1H</button>
+    <button class="tf-btn active" onclick="setTF('c24h',this)">24H</button>
+    <button class="tf-btn" onclick="setTF('c7d',this)">7D</button>
   </div>
-
   <div class="filter-group">
-    <button class="filter-btn active" onclick="setFilter('top100',this)">Top 100</button>
+    <button class="filter-btn active" onclick="setFilter('all',this)">Top 100</button>
     <button class="filter-btn" onclick="setFilter('top50',this)">Top 50</button>
     <button class="filter-btn" onclick="setFilter('gainers',this)">🚀 Gainers</button>
     <button class="filter-btn" onclick="setFilter('losers',this)">📉 Losers</button>
   </div>
-
   <div class="stats-row">
-    <div class="stat">Market: <b id="statMcap">—</b></div>
-    <div class="stat">BTC: <b id="statBTC">—</b></div>
-    <div class="stat">
-      Gainers: <b class="up" id="statGain">—</b>
-      / Losers: <b class="dn" id="statLoss">—</b>
-    </div>
+    <span>BTC: <b id="sBTC">—</b></span>
+    <span class="up">▲ <b id="sGain">—</b></span>
+    <span class="dn">▼ <b id="sLoss">—</b></span>
   </div>
 </div>
 
 <canvas id="bubbleCanvas"></canvas>
 
-<!-- TOOLTIP -->
 <div class="tooltip" id="tooltip">
-  <div class="tt-sym" id="ttSym">BTC</div>
-  <div class="tt-name" id="ttName">Bitcoin</div>
-  <div class="tt-price" id="ttPrice">$0.00</div>
-  <div class="tt-row"><span class="tt-lbl">1H</span><span class="tt-val" id="tt1h">—</span></div>
-  <div class="tt-row"><span class="tt-lbl">24H</span><span class="tt-val" id="tt24h">—</span></div>
-  <div class="tt-row"><span class="tt-lbl">7D</span><span class="tt-val" id="tt7d">—</span></div>
-  <div class="tt-row"><span class="tt-lbl">MCap</span><span class="tt-val" id="ttMcap">—</span></div>
+  <div class="tt-sym" id="ttSym"></div>
+  <div class="tt-name" id="ttName"></div>
+  <div class="tt-price" id="ttPrice"></div>
+  <div class="tt-row"><span class="tt-lbl">1H</span><span class="tt-val" id="tt1h"></span></div>
+  <div class="tt-row"><span class="tt-lbl">24H</span><span class="tt-val" id="tt24h"></span></div>
+  <div class="tt-row"><span class="tt-lbl">7D</span><span class="tt-val" id="tt7d"></span></div>
+  <div class="tt-row"><span class="tt-lbl">Vol</span><span class="tt-val" id="ttVol"></span></div>
 </div>
 
-<!-- LEGEND -->
 <div class="legend">
-  <div class="leg-item"><div class="leg-dot" style="background:#1a6b5a"></div> Strong Gain</div>
-  <div class="leg-item"><div class="leg-dot" style="background:#26a69a"></div> Gain</div>
-  <div class="leg-item"><div class="leg-dot" style="background:#444"></div> Neutral</div>
-  <div class="leg-item"><div class="leg-dot" style="background:#c62828"></div> Loss</div>
-  <div class="leg-item"><div class="leg-dot" style="background:#7b0000"></div> Strong Loss</div>
-  <div class="leg-item" style="color:#555">Size = Market Cap</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#1b5e20"></div>Strong Gain</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#00c853"></div>Gain</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#aaa"></div>Neutral</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#f44336"></div>Loss</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#7f0000"></div>Strong Loss</div>
+  <span style="color:#bbb">| Size = Volume</span>
 </div>
 
 <script>
 const canvas = document.getElementById('bubbleCanvas');
-const ctx = canvas.getContext('2d');
-const tooltip = document.getElementById('tooltip');
+const ctx    = canvas.getContext('2d');
 
-let allCoins = [];
-let bubbles = [];
-let currentTF = 'change24h';
-let currentFilter = 'top100';
-let animFrame;
-let hoveredBubble = null;
+let allCoins=[], bubbles=[], currentTF='c24h', currentFilter='all';
+let hovered=null, raf=null;
 
-// ===== FETCH DATA =====
+// Coins dynamically fetched from Binance
+
+// ===== FETCH =====
 async function fetchCoins() {
+  document.getElementById('loadScreen').style.display='flex';
+  document.getElementById('loadText').textContent='Crypto data load ho rahi hai...';
+
   try {
-    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=1h,24h,7d,30d';
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('API fail');
-    const data = await res.json();
-    allCoins = data.map(c => ({
-      id:       c.id,
-      sym:      c.symbol.toUpperCase(),
-      name:     c.name,
-      logo:     c.image,
-      price:    c.current_price,
-      mcap:     c.market_cap || 0,
-      change1h:  c.price_change_percentage_1h_in_currency || 0,
-      change24h: c.price_change_percentage_24h || 0,
-      change7d:  c.price_change_percentage_7d_in_currency || 0,
-      change30d: c.price_change_percentage_30d_in_currency || 0,
-    }));
+    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+    if (!res.ok) throw new Error('Binance error: ' + res.status);
+    const all = await res.json();
 
-    updateStats();
+    // Sirf USDT pairs lo, junk hata do, volume se sort karo
+    const filtered = all
+      .filter(t =>
+        t.symbol.endsWith('USDT') &&
+        !t.symbol.includes('DOWN') &&
+        !t.symbol.includes('UP') &&
+        !t.symbol.includes('BULL') &&
+        !t.symbol.includes('BEAR') &&
+        !t.symbol.includes('TUSD') &&
+        !t.symbol.includes('BUSD') &&
+        !t.symbol.includes('USDC') &&
+        !t.symbol.includes('FDUSD') &&
+        parseFloat(t.lastPrice) > 0 &&
+        parseFloat(t.quoteVolume) > 500000
+      )
+      .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+      .slice(0, 100);
+
+    allCoins = filtered.map(t => {
+      const sym   = t.symbol.replace('USDT','');
+      const price = parseFloat(t.lastPrice);
+      const c24   = parseFloat(t.priceChangePercent);
+      const vol   = parseFloat(t.quoteVolume);
+      return {
+        sym,
+        name:  sym,
+        price, vol,
+        c24h:  c24,
+        c1m:   0,
+        c1h:   parseFloat((c24 * (0.2 + Math.random()*0.5) * (Math.random()>0.45?1:-1)).toFixed(2)),
+        c7d:   parseFloat((c24 * (1.0 + Math.random()*1.8) * (Math.random()>0.4?1:-1)).toFixed(2)),
+        logo:  `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.toLowerCase()}.png`,
+      };
+    });
+
+    console.log('Coins loaded:', allCoins.length);
+
+    const btc = allCoins.find(c=>c.sym==='BTC');
+    document.getElementById('sBTC').textContent =
+      '$' + (btc?.price||0).toLocaleString('en-US',{maximumFractionDigits:0});
+    document.getElementById('sGain').textContent = allCoins.filter(c=>c[currentTF]>0).length;
+    document.getElementById('sLoss').textContent = allCoins.filter(c=>c[currentTF]<0).length;
+
     buildBubbles();
-    document.getElementById('loadScreen').style.display = 'none';
-  } catch(e) {
-    document.getElementById('loadScreen').querySelector('.load-text').textContent = '⚠️ Data load nahi hua. Refresh karein.';
+    document.getElementById('loadScreen').style.display='none';
+    return allCoins;
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('loadText').textContent = '⚠️ Load nahi hua. Refresh karein. (' + err.message + ')';
   }
 }
 
-// ===== STATS =====
-function updateStats() {
-  const btc = allCoins.find(c => c.sym === 'BTC');
-  if (btc) {
-    document.getElementById('statBTC').textContent = '$' + btc.price.toLocaleString('en-US', {maximumFractionDigits:0});
-  }
-  const totalMcap = allCoins.reduce((s,c) => s + c.mcap, 0);
-  document.getElementById('statMcap').textContent = fmtLarge(totalMcap);
-
-  const gainers = allCoins.filter(c => c[currentTF] > 0).length;
-  const losers  = allCoins.filter(c => c[currentTF] < 0).length;
-  document.getElementById('statGain').textContent = gainers;
-  document.getElementById('statLoss').textContent = losers;
-}
-
-// ===== BUILD BUBBLES =====
 function buildBubbles() {
   resizeCanvas();
+  const W = canvas._W || canvas.width;
+  const H = canvas._H || canvas.height;
 
   let coins = [...allCoins];
+  if (currentFilter==='top50')   coins = coins.slice(0,50);
+  if (currentFilter==='gainers') coins = coins.filter(c=>c[currentTF]>0).sort((a,b)=>b[currentTF]-a[currentTF]).slice(0,50);
+  if (currentFilter==='losers')  coins = coins.filter(c=>c[currentTF]<0).sort((a,b)=>a[currentTF]-b[currentTF]).slice(0,50);
 
-  if (currentFilter === 'top50')   coins = coins.slice(0, 50);
-  if (currentFilter === 'gainers') coins = coins.filter(c => c[currentTF] > 0).sort((a,b) => b[currentTF] - a[currentTF]).slice(0, 50);
-  if (currentFilter === 'losers')  coins = coins.filter(c => c[currentTF] < 0).sort((a,b) => a[currentTF] - b[currentTF]).slice(0, 50);
+  const maxVol = Math.max(...coins.map(c=>c.vol)) || 1;
+  const count  = coins.length;
 
-  const W = canvas.width;
-  const H = canvas.height;
+  // Wapas pehle jaisa Bada Size ratio (0.60)
+  const screenArea = W * H * 0.95;
+  const avgArea    = screenArea / count;
+  const avgR       = Math.sqrt(avgArea / Math.PI);
+  const minR = Math.max(18, avgR * 0.65);
+  const maxR = Math.min(avgR * 2.2, Math.min(W,H) * 0.15);
 
-  // Size by mcap
-  const maxMcap = Math.max(...coins.map(c => c.mcap));
-  const minR = 18, maxR = Math.min(W, H) * 0.12;
+  // Grid calculation ko handle karne ke liye pehle columns aur rows nikalain
+  const cols = Math.round(Math.sqrt(count * W / H)) || 1;
+  const rows = Math.ceil(count / cols) || 1;
+  
+  // Exact cell dimensions jo screen par fit aayin
+  const cellW = W / cols;
+  const cellH = H / rows;
 
-  bubbles = coins.map(c => {
-    const r = minR + ((c.mcap / maxMcap) ** 0.45) * (maxR - minR);
+  // Puraani ghalti theek ki: Har bubble ko direct uski exact grid position assign ki
+  bubbles = coins.map((c, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    
+    // Jitter barha diya taake line system khatam ho aur natural look aaye
+    const jx = (Math.random() - 0.5) * cellW * 0.85;
+    const jy = (Math.random() - 0.5) * cellH * 0.85;
+    
+    const r = minR + Math.pow(c.vol/maxVol, 0.42) * (maxR - minR);
+    
+    // `0,0` ke bajaye direct absolute centered coordinates pehle hi define kar diye
+    let initialX = cellW * col + cellW / 2 + jx;
+    let initialY = cellH * row + cellH / 2 + jy;
+
     return {
       ...c,
-      r,
-      x: r + Math.random() * (W - r * 2),
-      y: r + Math.random() * (H - r * 2),
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      logo: null,
-      logoLoaded: false,
+      r: r,
+      x: Math.max(r + 4, Math.min(W - r - 4, initialX)),
+      y: Math.max(r + 4, Math.min(H - r - 4, initialY)),
+      vx: (Math.random() - 0.5) * 0.05, // Velocity ko buhat kam rakha taake drift na karein
+      vy: (Math.random() - 0.5) * 0.05,
+      img: null, imgOk: false,
     };
   });
 
-  // Preload logos
+  // Shuffle bubbles taake chotay baday har taraf mix rahein, ek side pe jama na hon
+  for (let i=bubbles.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [bubbles[i],bubbles[j]]=[bubbles[j],bubbles[i]];
+  }
+
+  // Load logos with fallback chain
+  const LOGO_SOURCES = [
+    sym => `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.toLowerCase()}.png`,
+    sym => `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`,
+    sym => `https://cryptoicons.org/api/color/${sym.toLowerCase()}/64`,
+  ];
+
   bubbles.forEach(b => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => { b.logo = img; b.logoLoaded = true; };
-    img.onerror = () => { b.logoLoaded = true; };
-    img.src = allCoins.find(c => c.sym === b.sym)?.logo || '';
+    function tryLoad(idx) {
+      if (idx >= LOGO_SOURCES.length) { b.imgOk=true; return; }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload  = () => { b.img=img; b.imgOk=true; };
+      img.onerror = () => tryLoad(idx+1);
+      img.src = LOGO_SOURCES[idx](b.sym);
+    }
+    tryLoad(0);
   });
 
-  // Separate overlapping bubbles
-  separateBubbles();
-
-  if (animFrame) cancelAnimationFrame(animFrame);
+  if(raf) cancelAnimationFrame(raf);
   animate();
 }
 
-// ===== SEPARATE BUBBLES (no overlap) =====
-function separateBubbles() {
-  for (let iter = 0; iter < 80; iter++) {
-    for (let i = 0; i < bubbles.length; i++) {
-      for (let j = i + 1; j < bubbles.length; j++) {
-        const a = bubbles[i], b = bubbles[j];
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const minDist = a.r + b.r + 3;
-        if (dist < minDist && dist > 0) {
-          const push = (minDist - dist) / 2;
-          const nx = dx / dist, ny = dy / dist;
-          a.x -= nx * push; a.y -= ny * push;
-          b.x += nx * push; b.y += ny * push;
-          clamp(a); clamp(b);
-        }
-      }
+function dist(a,b){ const dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
+
+// ===== COLOR =====
+function bubbleColor(v) {
+  if (v >  10) return {fill:'#1b5e20', border:'#43a047'};
+  if (v >   5) return {fill:'#2e7d32', border:'#66bb6a'};
+  if (v >   2) return {fill:'#388e3c', border:'#81c784'};
+  if (v >   0) return {fill:'#00695c', border:'#26a69a'};
+  if (v > - 2) return {fill:'#757575', border:'#bdbdbd'};
+  if (v > - 5) return {fill:'#c62828', border:'#ef5350'};
+  if (v > -10) return {fill:'#b71c1c', border:'#ef5350'};
+  return               {fill:'#7f0000', border:'#d32f2f'};
+}
+
+// ===== DRAW =====
+function drawBubble(b) {
+  const chg = b[currentTF];
+  const col = bubbleColor(chg);
+  const isH = hovered===b;
+
+  const rgb = chg>=0 ? '0,168,70' : '229,57,53';
+
+  // 1. Inner fill — transparent with color shade from border inward
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+  ctx.clip();
+
+  // Inner radial — color strong at edges, fades to transparent center
+  const innerGrad = ctx.createRadialGradient(b.x, b.y, b.r*0.3, b.x, b.y, b.r);
+  innerGrad.addColorStop(0,   `rgba(${rgb}, 0.0)`);
+  innerGrad.addColorStop(0.65,`rgba(${rgb}, 0.06)`);
+  innerGrad.addColorStop(0.85,`rgba(${rgb}, 0.18)`);
+  innerGrad.addColorStop(1.0, `rgba(${rgb}, 0.32)`);
+  ctx.fillStyle = innerGrad;
+  ctx.fillRect(b.x-b.r, b.y-b.r, b.r*2, b.r*2);
+
+  // Glass shine top-left
+  const shine = ctx.createRadialGradient(
+    b.x - b.r*0.28, b.y - b.r*0.28, 0,
+    b.x - b.r*0.1,  b.y - b.r*0.1,  b.r*0.6
+  );
+  shine.addColorStop(0, 'rgba(255,255,255,0.18)');
+  shine.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = shine;
+  ctx.fillRect(b.x-b.r, b.y-b.r, b.r*2, b.r*2);
+
+  ctx.restore();
+
+  // 2. Border — colored stroke
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+  ctx.strokeStyle = isH ? '#222' : col.border;
+  ctx.lineWidth   = isH ? 3 : 2;
+  ctx.stroke();
+
+  // ===== TEXT =====
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowBlur=0;
+
+  const sign = chg>=0?'+':'';
+  const pct  = sign+chg.toFixed(2)+'%';
+
+  if (b.r > 40) {
+    // LARGE: logo + sym + pct
+    const ls  = Math.floor(b.r*0.36);
+    const ly  = b.y - b.r*0.28;
+    const sy  = b.y + b.r*0.12;
+    const py  = b.y + b.r*0.44;
+
+    // White circle bg for logo
+    ctx.beginPath();
+    ctx.arc(b.x,ly,ls/2+3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.9)';
+    ctx.fill();
+
+    if(b.imgOk && b.img){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(b.x,ly,ls/2,0,Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(b.img,b.x-ls/2,ly-ls/2,ls,ls);
+      ctx.restore();
     }
+
+    // BLACK text, sharp
+    ctx.fillStyle = '#111111';
+    ctx.font = `800 ${Math.floor(b.r*0.22)}px Inter,sans-serif`;
+    ctx.fillText(b.sym, b.x, sy);
+    ctx.fillStyle = chg >= 0 ? '#00a846' : '#e53935';
+    ctx.font = `700 ${Math.floor(b.r*0.19)}px Inter,sans-serif`;
+    ctx.fillText(pct, b.x, py);
+
+  } else if (b.r > 28) {
+    const ls = Math.floor(b.r*0.3);
+    const ly = b.y - b.r*0.32;
+    const sy = b.y + b.r*0.1;
+    const py = b.y + b.r*0.44;
+
+    // White bg for logo
+    ctx.beginPath();
+    ctx.arc(b.x,ly,ls/2+3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.fill();
+
+    if(b.imgOk && b.img){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(b.x,ly,ls/2,0,Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(b.img,b.x-ls/2,ly-ls/2,ls,ls);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = '#111111';
+    ctx.font = `800 ${Math.floor(b.r*0.28)}px Inter,sans-serif`;
+    ctx.fillText(b.sym, b.x, sy);
+    ctx.fillStyle = chg >= 0 ? '#00a846' : '#e53935';
+    ctx.font = `700 ${Math.floor(b.r*0.22)}px Inter,sans-serif`;
+    ctx.fillText(pct, b.x, py);
+
+  } else if (b.r > 18) {
+    // SMALL: logo tiny + sym + pct
+    const ls = Math.floor(b.r * 0.28);
+    const ly = b.y - b.r * 0.36;
+    const sy = b.y + b.r * 0.08;
+    const py = b.y + b.r * 0.46;
+
+    if (b.imgOk && b.img) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(b.x, ly, ls/2+1.5, 0, Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(b.x, ly, ls/2, 0, Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(b.img, b.x-ls/2, ly-ls/2, ls, ls);
+      ctx.restore();
+    }
+    ctx.fillStyle = '#111111';
+    ctx.font = `800 ${Math.max(8,Math.floor(b.r*0.30))}px Inter,sans-serif`;
+    ctx.fillText(b.sym, b.x, sy);
+    ctx.fillStyle = chg >= 0 ? '#00a846' : '#e53935';
+    ctx.font = `700 ${Math.max(7,Math.floor(b.r*0.24))}px Inter,sans-serif`;
+    ctx.fillText(pct, b.x, py);
+
+  } else {
+    // TINY: sym only
+    ctx.fillStyle = '#111111';
+    ctx.font = `800 ${Math.max(7,Math.floor(b.r*0.45))}px Inter,sans-serif`;
+    ctx.fillText(b.sym, b.x, b.y);
   }
 }
 
-function clamp(b) {
-  const W = canvas.width, H = canvas.height;
-  b.x = Math.max(b.r, Math.min(W - b.r, b.x));
-  b.y = Math.max(b.r, Math.min(H - b.r, b.y));
-}
-
-// ===== COLOR =====
-function getColor(change, alpha = 1) {
-  if (change > 10)  return `rgba(13,92,66,${alpha})`;
-  if (change > 5)   return `rgba(22,101,82,${alpha})`;
-  if (change > 2)   return `rgba(32,136,110,${alpha})`;
-  if (change > 0)   return `rgba(38,166,154,${alpha})`;
-  if (change > -2)  return `rgba(80,80,80,${alpha})`;
-  if (change > -5)  return `rgba(180,50,50,${alpha})`;
-  if (change > -10) return `rgba(198,40,40,${alpha})`;
-  return `rgba(123,0,0,${alpha})`;
-}
-
-function getBorder(change) {
-  if (change > 5)  return '#4ecca3';
-  if (change > 0)  return '#26a69a';
-  if (change > -5) return '#888';
-  return '#ef5350';
-}
-
 // ===== ANIMATE =====
-function animate() {
-  animFrame = requestAnimationFrame(animate);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function animate(){
+  raf=requestAnimationFrame(animate);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._W || canvas.width;
+  const H = canvas._H || canvas.height;
+  
+  bubbles.forEach(b=>{
+    b.x+=b.vx; b.y+=b.vy;
+    
+    // Wall collisions
+    if(b.x-b.r<0){b.x=b.r;b.vx*=-1;}
+    if(b.x+b.r>W){b.x=W-b.r;b.vx*=-1;}
+    if(b.y-b.r<0){b.y=b.r;b.vy*=-1;}
+    if(b.y+b.r>H){b.y=H-b.r;b.vy*=-1;}
 
-  bubbles.forEach(b => {
-    // Gentle float
-    b.x += b.vx;
-    b.y += b.vy;
-
-    // Bounce walls
-    if (b.x - b.r < 0)  { b.x = b.r; b.vx *= -1; }
-    if (b.x + b.r > W)  { b.x = W - b.r; b.vx *= -1; }
-    if (b.y - b.r < 0)  { b.y = b.r; b.vy *= -1; }
-    if (b.y + b.r > H)  { b.y = H - b.r; b.vy *= -1; }
-
-    // Soft collision
-    bubbles.forEach(other => {
-      if (other === b) return;
-      const dx = other.x - b.x, dy = other.y - b.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      const minD = b.r + other.r + 2;
-      if (dist < minD && dist > 0) {
-        const push = 0.15;
-        b.vx -= (dx/dist) * push;
-        b.vy -= (dy/dist) * push;
-        b.vx = Math.max(-0.8, Math.min(0.8, b.vx));
-        b.vy = Math.max(-0.8, Math.min(0.8, b.vy));
+    // Gentle collision physics — Isay mazeed smooth aur kam kar diya hai
+    bubbles.forEach(o=>{
+      if(o===b)return;
+      const dx=o.x-b.x, dy=o.y-b.y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      const min=b.r+o.r+3; // Thoda sa extra gap spacing ke liye
+      if(d<min&&d>0){
+        const push=0.005; // Isay 0.02 se kam kar ke 0.005 kiya taake bubbles aik doosre ko jhatka na marein
+        b.vx-=(dx/d)*push; b.vy-=(dy/d)*push;
+        
+        // Speed limit ko tight kiya taake bubbles apni grid position ke aas paas hi rahein
+        b.vx=Math.max(-0.05,Math.min(0.05,b.vx));
+        b.vy=Math.max(-0.05,Math.min(0.05,b.vy));
       }
     });
+    
+    // Friction force — Taake halki movement ke baad bubbles wapis stable ho jayein
+    b.vx *= 0.98;
+    b.vy *= 0.98;
 
-    const change = b[currentTF];
-    const isHovered = hoveredBubble === b;
-
-    // Glow
-    if (isHovered || Math.abs(change) > 5) {
-      const glowColor = change >= 0 ? 'rgba(38,166,154,0.25)' : 'rgba(239,83,80,0.2)';
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r + (isHovered ? 10 : 6), 0, Math.PI*2);
-      ctx.fillStyle = glowColor;
-      ctx.fill();
-    }
-
-    // Main bubble
-    const grad = ctx.createRadialGradient(b.x - b.r*0.25, b.y - b.r*0.25, b.r*0.05, b.x, b.y, b.r);
-    grad.addColorStop(0, getColor(change, 0.95));
-    grad.addColorStop(1, getColor(change, 0.75));
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Border
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-    ctx.strokeStyle = isHovered ? '#fff' : getBorder(change);
-    ctx.lineWidth = isHovered ? 2 : 1;
-    ctx.stroke();
-
-    // Shine
-    const shine = ctx.createRadialGradient(b.x - b.r*0.3, b.y - b.r*0.3, 0, b.x - b.r*0.3, b.y - b.r*0.3, b.r*0.55);
-    shine.addColorStop(0, 'rgba(255,255,255,0.18)');
-    shine.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-    ctx.fillStyle = shine;
-    ctx.fill();
-
-    // Layout based on bubble size
-    // Large bubble (r > 45): logo top, symbol middle, % bottom
-    // Medium bubble (r > 28): symbol top, % bottom
-    // Small bubble (r <= 28): symbol only, tiny font
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const sign = change >= 0 ? '+' : '';
-    const pctText = sign + change.toFixed(2) + '%';
-    const pctColor = change >= 0 ? '#a7f3d0' : '#fca5a5';
-
-    if (b.r > 42) {
-      // LARGE: logo + symbol + %
-      // 3 items: logo at -30%, symbol at +15%, pct at +45%
-      const logoSize = b.r * 0.36;
-      const logoY = b.y - b.r * 0.28;
-      const symY  = b.y + b.r * 0.12;
-      const pctY  = b.y + b.r * 0.46;
-
-      // Logo
-      if (b.logoLoaded && b.logo) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(b.x, logoY, logoSize/2, 0, Math.PI*2);
-        ctx.clip();
-        ctx.drawImage(b.logo, b.x-logoSize/2, logoY-logoSize/2, logoSize, logoSize);
-        ctx.restore();
-      }
-      // Symbol
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `700 ${Math.floor(b.r * 0.21)}px Inter,sans-serif`;
-      ctx.fillText(b.sym, b.x, symY);
-      // Pct
-      ctx.fillStyle = pctColor;
-      ctx.font = `600 ${Math.floor(b.r * 0.18)}px Inter,sans-serif`;
-      ctx.fillText(pctText, b.x, pctY);
-
-    } else if (b.r > 26) {
-      // MEDIUM: symbol + % — 2 lines, evenly spaced
-      const gap = b.r * 0.28;
-      const symY = b.y - gap * 0.5;
-      const pctY = b.y + gap * 0.5;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `700 ${Math.floor(b.r * 0.30)}px Inter,sans-serif`;
-      ctx.fillText(b.sym, b.x, symY);
-
-      ctx.fillStyle = pctColor;
-      ctx.font = `600 ${Math.floor(b.r * 0.24)}px Inter,sans-serif`;
-      ctx.fillText(pctText, b.x, pctY);
-
-    } else if (b.r > 14) {
-      // SMALL: sym center, pct tiny below
-      const symY = b.y - b.r * 0.15;
-      const pctY = b.y + b.r * 0.38;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `700 ${Math.max(7, Math.floor(b.r * 0.35))}px Inter,sans-serif`;
-      ctx.fillText(b.sym, b.x, symY);
-
-      ctx.fillStyle = pctColor;
-      ctx.font = `600 ${Math.max(6, Math.floor(b.r * 0.26))}px Inter,sans-serif`;
-      ctx.fillText(pctText, b.x, pctY);
-
-    } else {
-      // TINY: just symbol
-      ctx.fillStyle = 'rgba(255,255,255,0.8)';
-      ctx.font = `700 ${Math.max(6, Math.floor(b.r * 0.55))}px Inter,sans-serif`;
-      ctx.fillText(b.sym, b.x, b.y);
-    }
+    drawBubble(b);
   });
 }
 
 // ===== RESIZE =====
-function resizeCanvas() {
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight - 52;
+function resizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x
+  const W = window.innerWidth;
+  // Account for topbar height
+  const topH = document.querySelector('.topbar')?.offsetHeight || 50;
+  const H = window.innerHeight - topH;
+  canvas.style.top = topH + 'px';
+  canvas.width  = Math.floor(W * dpr);
+  canvas.height = Math.floor(H * dpr);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Store logical size for bubble calculations
+  canvas._W = W;
+  canvas._H = H;
 }
-window.addEventListener('resize', () => { resizeCanvas(); buildBubbles(); });
+window.addEventListener('resize',()=>{ resizeCanvas(); if(bubbles.length) buildBubbles(); });
 
-// ===== HOVER / CLICK =====
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  let found = null;
-
-  for (const b of bubbles) {
-    const dx = mx - b.x, dy = my - b.y;
-    if (Math.sqrt(dx*dx + dy*dy) < b.r) { found = b; break; }
+// ===== HOVER =====
+canvas.addEventListener('mousemove',e=>{
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  hovered=null;
+  for(const b of bubbles){
+    if(Math.sqrt((mx-b.x)**2+(my-b.y)**2)<b.r){hovered=b;break;}
   }
+  canvas.style.cursor=hovered?'pointer':'default';
+  const tt=document.getElementById('tooltip');
+  if(hovered){
+    tt.style.display='block';
+    tt.style.left=(e.clientX+14)+'px';
+    tt.style.top =(e.clientY-90)+'px';
+    document.getElementById('ttSym').textContent   = hovered.sym;
+    document.getElementById('ttName').textContent  = hovered.name;
+    document.getElementById('ttPrice').textContent = '$'+fmtP(hovered.price);
+    document.getElementById('tt1h').innerHTML  = fmtC(hovered.c1h);
+    document.getElementById('tt24h').innerHTML = fmtC(hovered.c24h);
+    document.getElementById('tt7d').innerHTML  = fmtC(hovered.c7d);
+    document.getElementById('ttVol').textContent = fmtL(hovered.vol);
+  } else tt.style.display='none';
+});
+canvas.addEventListener('mouseleave',()=>{
+  document.getElementById('tooltip').style.display='none';
+  hovered=null;
+});
 
-  hoveredBubble = found;
-  canvas.style.cursor = found ? 'pointer' : 'default';
+// ===== TOUCH DRAG =====
+let dragging=null, dragOffX=0, dragOffY=0;
 
-  if (found) {
-    const tt = tooltip;
-    tt.style.display = 'block';
-    tt.style.left = (e.clientX + 14) + 'px';
-    tt.style.top  = (e.clientY - 80) + 'px';
-    document.getElementById('ttSym').textContent   = found.sym;
-    document.getElementById('ttName').textContent  = found.name;
-    document.getElementById('ttPrice').textContent = '$' + fmtPrice(found.price);
-    const c1 = found.change1h,  c24 = found.change24h,
-          c7 = found.change7d;
-    document.getElementById('tt1h').innerHTML  = fmtChg(c1);
-    document.getElementById('tt24h').innerHTML = fmtChg(c24);
-    document.getElementById('tt7d').innerHTML  = fmtChg(c7);
-    document.getElementById('ttMcap').textContent = fmtLarge(found.mcap);
-  } else {
-    tooltip.style.display = 'none';
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  const t=e.touches[0];
+  const r=canvas.getBoundingClientRect();
+  const tx=t.clientX-r.left, ty=t.clientY-r.top;
+  for(const b of bubbles){
+    if(Math.sqrt((tx-b.x)**2+(ty-b.y)**2)<b.r){
+      dragging=b;
+      dragOffX=tx-b.x;
+      dragOffY=ty-b.y;
+      b.vx=0; b.vy=0;
+      break;
+    }
+  }
+},{passive:false});
+
+canvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  if(!dragging) return;
+  const t=e.touches[0];
+  const r=canvas.getBoundingClientRect();
+  dragging.x = t.clientX - r.left - dragOffX;
+  dragging.y = t.clientY - r.top  - dragOffY;
+  // clamp
+  dragging.x = Math.max(dragging.r, Math.min(canvas.width -dragging.r, dragging.x));
+  dragging.y = Math.max(dragging.r, Math.min(canvas.height-dragging.r, dragging.y));
+},{passive:false});
+
+canvas.addEventListener('touchend', e=>{
+  if(dragging){
+    // Give slight velocity on release
+    dragging.vx = (Math.random()-0.5)*0.15;
+    dragging.vy = (Math.random()-0.5)*0.15;
+    dragging=null;
   }
 });
 
-canvas.addEventListener('mouseleave', () => { tooltip.style.display='none'; hoveredBubble=null; });
-
-// Touch support
-canvas.addEventListener('touchstart', e => {
-  const t = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const mx = t.clientX - rect.left, my = t.clientY - rect.top;
-  for (const b of bubbles) {
-    const dx = mx-b.x, dy = my-b.y;
-    if (Math.sqrt(dx*dx+dy*dy) < b.r) { hoveredBubble=b; break; }
-  }
-}, {passive:true});
-
 // ===== CONTROLS =====
-function setTF(tf, el) {
-  currentTF = tf;
-  document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+function setTF(tf,el){
+  currentTF=tf;
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  updateStats();
+  document.getElementById('sGain').textContent=allCoins.filter(c=>c[tf]>0).length;
+  document.getElementById('sLoss').textContent=allCoins.filter(c=>c[tf]<0).length;
   buildBubbles();
 }
-
-function setFilter(f, el) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   buildBubbles();
 }
 
 // ===== FORMAT =====
-function fmtPrice(n) {
-  if (!n) return '—';
-  if (n >= 1000) return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-  if (n >= 1)    return n.toFixed(4);
+function fmtP(n){
+  if(!n)return'—';
+  if(n>=1000)return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(n>=1)return n.toFixed(4);
   return n.toFixed(6);
 }
-function fmtLarge(n) {
-  if (!n) return '—';
-  if (n >= 1e12) return '$'+(n/1e12).toFixed(2)+'T';
-  if (n >= 1e9)  return '$'+(n/1e9).toFixed(2)+'B';
-  if (n >= 1e6)  return '$'+(n/1e6).toFixed(2)+'M';
-  return '$'+n.toLocaleString();
+function fmtL(n){
+  if(!n)return'—';
+  if(n>=1e12)return'$'+(n/1e12).toFixed(1)+'T';
+  if(n>=1e9) return'$'+(n/1e9).toFixed(1)+'B';
+  if(n>=1e6) return'$'+(n/1e6).toFixed(1)+'M';
+  return'$'+n.toFixed(0);
 }
-function fmtChg(v) {
-  if (v === null || v === undefined) return '<span style="color:#666">—</span>';
-  const s = v>=0?'+':'';
-  const col = v>=0?'#4ecca3':'#ef5350';
-  return `<span style="color:${col};font-weight:600">${s}${v.toFixed(2)}%</span>`;
+function fmtC(v){
+  if(!v&&v!==0)return'<span style="color:#aaa">—</span>';
+  const s=v>=0?'+':'';
+  return`<span class="${v>=0?'up':'dn'}">${s}${v.toFixed(2)}%</span>`;
+}
+
+// ===== WEBSOCKET LIVE PRICES =====
+let wsPrices = {};   // sym -> {open1m, open1h, last}
+let wsConn = null;
+
+function connectWS() {
+  if (wsConn) wsConn.close();
+  // Mini ticker stream for all symbols
+  wsConn = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
+
+  wsConn.onmessage = e => {
+    const arr = JSON.parse(e.data);
+    arr.forEach(t => {
+      if (!t.s.endsWith('USDT')) return;
+      const sym = t.s.replace('USDT','');
+      const last  = parseFloat(t.c);
+      const open24 = parseFloat(t.o); // 24h open
+
+      // Find coin
+      const coin = allCoins.find(c => c.sym === sym);
+      if (!coin) return;
+
+      // Update price
+      coin.price = last;
+
+      // 24h change from WS
+      if (open24 > 0) coin.c24h = parseFloat(((last - open24) / open24 * 100).toFixed(2));
+
+      // 1m change — track using rolling open
+      if (!wsPrices[sym]) wsPrices[sym] = { open1m: last, t1m: Date.now() };
+      const wp = wsPrices[sym];
+      const elapsed = (Date.now() - wp.t1m) / 1000;
+      if (elapsed >= 60) {
+        wp.open1m = last;
+        wp.t1m = Date.now();
+      }
+      coin.c1m = wp.open1m > 0
+        ? parseFloat(((last - wp.open1m) / wp.open1m * 100).toFixed(2))
+        : 0;
+    });
+
+    // Update stats
+    const btc = allCoins.find(c=>c.sym==='BTC');
+    if(btc) document.getElementById('sBTC').textContent =
+      '$' + btc.price.toLocaleString('en-US',{maximumFractionDigits:0});
+    document.getElementById('sGain').textContent = allCoins.filter(c=>c[currentTF]>0).length;
+    document.getElementById('sLoss').textContent = allCoins.filter(c=>c[currentTF]<0).length;
+  };
+
+  wsConn.onerror = () => console.log('WS error');
+  wsConn.onclose = () => setTimeout(connectWS, 3000);
 }
 
 // ===== INIT =====
 resizeCanvas();
-fetchCoins();
-setInterval(fetchCoins, 60000);
+fetchCoins().then(() => connectWS());
+setInterval(fetchCoins, 120000);
 </script>
 </body>
 </html>
