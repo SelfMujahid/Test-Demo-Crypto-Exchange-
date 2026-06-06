@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TestTrade — BTC Whale Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f0f2f5; --card:#fff; --border:#e0e0e0;
+    --btc:#f7931a; --text:#111; --muted:#777;
+    --green:#00c853; --red:#f44336; --blue:#1565c0;
+    --purple:#6a1b9a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; overflow:hidden; height:100vh; }
+
+  /* ===== TOPBAR ===== */
+  .topbar {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    background:#fff; border-bottom:1px solid var(--border);
+    display:flex; flex-direction:column;
+  }
+
+  .tb-row1 {
+    display:flex; align-items:center; gap:10px;
+    padding:8px 16px; flex-wrap:wrap;
+    border-bottom:1px solid #f0f0f0;
+  }
+  .logo { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; color:#111; text-decoration:none; }
+  .logo span { color:var(--btc); }
+  .back-btn { padding:4px 10px; background:#f5f5f5; border:1px solid #ddd; border-radius:7px; color:#555; font-size:11px; text-decoration:none; }
+  .ws-pill { display:flex; align-items:center; gap:5px; background:#f8f8f8; border:1px solid #eee; border-radius:20px; padding:4px 10px; font-size:10px; color:#888; }
+  .ws-dot { width:6px; height:6px; border-radius:50%; background:#ccc; }
+  .ws-dot.on  { background:var(--green); animation:pulse 1.5s infinite; }
+  .ws-dot.err { background:var(--red); }
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,200,83,0.4)}50%{box-shadow:0 0 0 4px rgba(0,200,83,0)}}
+
+  /* TIME FILTER */
+  .time-filter { display:flex; align-items:center; gap:4px; margin-left:auto; flex-wrap:wrap; }
+  .tf-btn { padding:4px 10px; border-radius:6px; background:#f5f5f5; border:1px solid #e0e0e0; color:#777; font-size:10px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; white-space:nowrap; }
+  .tf-btn.active { background:rgba(247,147,26,0.12); border-color:var(--btc); color:var(--btc); }
+
+  /* STATS ROW */
+  .tb-row2 { display:flex; align-items:stretch; gap:0; overflow-x:auto; scrollbar-width:none; }
+  .tb-row2::-webkit-scrollbar { display:none; }
+
+  .stat-box {
+    flex:0 0 auto; padding:8px 16px;
+    border-right:1px solid #f0f0f0;
+    min-width:120px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .stat-box:last-child { border-right:none; }
+  .sb-label { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#aaa; }
+  .sb-val { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:#111; }
+  .sb-sub { font-size:9px; color:#aaa; }
+  .btc-col { color:var(--btc); }
+  .grn-col { color:var(--green); }
+  .red-col { color:var(--red); }
+
+  /* EXCHANGE STATS ROW */
+  .tb-row3 {
+    display:flex; align-items:stretch; gap:0;
+    overflow-x:auto; scrollbar-width:none;
+    border-top:1px solid #f0f0f0;
+    background:#fafafa;
+  }
+  .tb-row3::-webkit-scrollbar { display:none; }
+  .exch-box {
+    flex:0 0 auto; padding:6px 14px;
+    border-right:1px solid #f0f0f0;
+    display:flex; align-items:center; gap:8px;
+    min-width:160px;
+  }
+  .exch-logo { width:22px; height:22px; border-radius:50%; object-fit:cover; flex-shrink:0; background:#eee; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .exch-logo img { width:22px; height:22px; border-radius:50%; }
+  .exch-info { display:flex; flex-direction:column; gap:1px; }
+  .exch-name { font-size:11px; font-weight:700; color:#333; }
+  .exch-stats { display:flex; gap:8px; }
+  .exch-in  { font-size:9px; color:var(--green); font-weight:600; }
+  .exch-out { font-size:9px; color:var(--red);   font-weight:600; }
+
+  /* FILTER BUTTONS */
+  .tb-row4 { display:flex; align-items:center; gap:4px; padding:6px 16px; border-top:1px solid #f0f0f0; flex-wrap:wrap; }
+  .min-btn { padding:4px 10px; border-radius:6px; background:#f5f5f5; border:1px solid #e0e0e0; color:#777; font-size:10px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; }
+  .min-btn.active { background:rgba(247,147,26,0.12); border-color:var(--btc); color:var(--btc); }
+  .sound-btn { padding:4px 10px; border-radius:6px; background:#f5f5f5; border:1px solid #e0e0e0; color:#777; font-size:10px; cursor:pointer; font-family:'Inter',sans-serif; margin-left:auto; }
+  .sound-btn.on { background:rgba(0,200,83,0.1); border-color:var(--green); color:var(--green); }
+
+  /* MAIN */
+  .main-wrap {
+    position:fixed; left:0; right:0; bottom:0;
+    display:grid; grid-template-columns:1fr 280px;
+  }
+  @media(max-width:700px){ .main-wrap{ grid-template-columns:1fr; } .side-panel{ display:none; } }
+
+  #txCanvas { width:100%; height:100%; display:block; }
+
+  /* SIDE PANEL */
+  .side-panel { background:var(--card); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+  .side-hdr { padding:10px 14px; border-bottom:1px solid var(--border); font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
+  .feed-list { flex:1; overflow-y:auto; }
+  .feed-list::-webkit-scrollbar { width:2px; }
+  .feed-list::-webkit-scrollbar-thumb { background:#ddd; }
+
+  .feed-item { padding:8px 12px; border-bottom:1px solid #f5f5f5; cursor:pointer; transition:background 0.15s; animation:slideIn 0.3s ease; }
+  .feed-item:hover { background:#fafafa; }
+  @keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .fi-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+  .fi-amt { font-size:12px; font-weight:700; color:var(--btc); }
+  .fi-badge { font-size:9px; font-weight:700; padding:1px 6px; border-radius:4px; }
+  .badge-whale   { background:rgba(247,147,26,0.15); color:#c47a00; }
+  .badge-exch    { background:rgba(21,101,192,0.12);  color:var(--blue); }
+  .badge-deposit { background:rgba(0,200,83,0.12);    color:#007a30; }
+  .badge-withdraw{ background:rgba(244,67,54,0.1);    color:var(--red); }
+  .badge-unknown { background:#f0f0f0; color:#888; }
+  .fi-route { font-size:10px; color:#555; }
+  .fi-meta  { display:flex; justify-content:space-between; margin-top:1px; }
+  .fi-usd  { font-size:9px; color:var(--muted); }
+  .fi-time { font-size:9px; color:#ccc; }
+
+  /* TOOLTIP */
+  .tooltip {
+    position:fixed; z-index:400; pointer-events:none; display:none;
+    background:#fff; border:1px solid #e0e0e0; border-radius:12px;
+    padding:12px 16px; min-width:200px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+  }
+  .tt-title { font-size:13px; font-weight:700; color:#111; margin-bottom:8px; }
+  .tt-row { display:flex; justify-content:space-between; gap:16px; font-size:11px; margin-top:3px; }
+  .tt-lbl { color:#888; }
+  .tt-val { font-weight:600; }
+  .tt-hash { font-size:9px; color:#bbb; margin-top:6px; word-break:break-all; font-family:monospace; }
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <!-- ROW 1: Logo + WS + Time Filter -->
+  <div class="tb-row1">
+    <a href="index.html" class="back-btn">← Back</a>
+    <div class="logo">₿ <span>Whale</span> Tracker</div>
+    <div class="ws-pill">
+      <div class="ws-dot" id="wsDot"></div>
+      <span id="wsLabel">Connecting...</span>
+    </div>
+    <div class="time-filter">
+      <span style="font-size:10px;color:#aaa;font-weight:600">Period:</span>
+      <button class="tf-btn active" onclick="setPeriod('session',this)">Session</button>
+      <button class="tf-btn" onclick="setPeriod('1m',this)">1m</button>
+      <button class="tf-btn" onclick="setPeriod('5m',this)">5m</button>
+      <button class="tf-btn" onclick="setPeriod('15m',this)">15m</button>
+      <button class="tf-btn" onclick="setPeriod('30m',this)">30m</button>
+      <button class="tf-btn" onclick="setPeriod('1h',this)">1h</button>
+      <button class="tf-btn" onclick="setPeriod('2h',this)">2h</button>
+      <button class="tf-btn" onclick="setPeriod('4h',this)">4h</button>
+    </div>
+  </div>
+
+  <!-- ROW 2: Global Stats -->
+  <div class="tb-row2">
+    <div class="stat-box">
+      <div class="sb-label">Total Transactions</div>
+      <div class="sb-val" id="sTxTotal">0</div>
+      <div class="sb-sub" id="sPeriodLabel">This Session</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">Total BTC Moved</div>
+      <div class="sb-val btc-col" id="sTotalBTC">0.00 ₿</div>
+      <div class="sb-sub" id="sTotalUSD">$0</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">Biggest TX</div>
+      <div class="sb-val btc-col" id="sBiggest">0.00 ₿</div>
+      <div class="sb-sub" id="sBiggestUSD">$0</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">Exchange Deposits</div>
+      <div class="sb-val grn-col" id="sDeposits">0.00 ₿</div>
+      <div class="sb-sub" id="sDepositsUSD">$0</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">Exchange Withdrawals</div>
+      <div class="sb-val red-col" id="sWithdraws">0.00 ₿</div>
+      <div class="sb-sub" id="sWithdrawsUSD">$0</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">🐳 Whale Txs</div>
+      <div class="sb-val" style="color:var(--btc)" id="sWhales">0</div>
+      <div class="sb-sub" id="sWhalesBTC">0.00 ₿</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">BTC Price</div>
+      <div class="sb-val" id="sBTCPrice">—</div>
+      <div class="sb-sub">Binance Live</div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Per-Exchange Stats -->
+  <div class="tb-row3" id="exchRow">
+    <div class="exch-box" style="color:#aaa;font-size:10px;min-width:auto">Exchange flows:</div>
+  </div>
+
+  <!-- ROW 4: Min Filter -->
+  <div class="tb-row4">
+    <span style="font-size:10px;color:#aaa;font-weight:600">Min BTC:</span>
+    <button class="min-btn active" onclick="setMin(0,this)">All</button>
+    <button class="min-btn" onclick="setMin(0.1,this)">0.1+</button>
+    <button class="min-btn" onclick="setMin(1,this)">1+</button>
+    <button class="min-btn" onclick="setMin(10,this)">10+</button>
+    <button class="min-btn" onclick="setMin(50,this)">50+</button>
+    <button class="min-btn" onclick="setMin(100,this)">🐳 100+</button>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔕 Sound</button>
+  </div>
+</div>
+
+<div class="main-wrap" id="mainWrap">
+  <canvas id="txCanvas"></canvas>
+  <div class="side-panel">
+    <div class="side-hdr">
+      Live Feed
+      <span id="feedCount" style="color:var(--btc);text-transform:none;letter-spacing:0">0 txs</span>
+    </div>
+    <div class="feed-list" id="feedList"></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-title" id="ttTitle">—</div>
+  <div class="tt-row"><span class="tt-lbl">Amount</span><span class="tt-val" id="ttBTC" style="color:var(--btc)">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">USD Value</span><span class="tt-val" id="ttUSD">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">From</span><span class="tt-val" id="ttFrom">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">To</span><span class="tt-val" id="ttTo">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Type</span><span class="tt-val" id="ttType">—</span></div>
+  <div class="tt-hash" id="ttHash"></div>
+</div>
+
+<script>
+// ===== STATE =====
+let btcPrice=67000, minBTC=0, soundOn=false;
+let nodes=[], arcs=[], hovered=null, raf;
+let sessionStart=Date.now(), currentPeriod='session';
+
+// Stats
+let stats={ tx:0, btc:0, biggest:0, biggestUSD:0, deposits:0, depositsUSD:0, withdraws:0, withdrawsUSD:0, whales:0, whalesBTC:0 };
+const allTxs=[];
+
+// Exchange data
+const EXCHANGES={
+  'Binance':  { color:'#f3ba2f', emoji:'🟡', in:0, inUSD:0, out:0, outUSD:0,
+    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/bnb.png' },
+  'Coinbase': { color:'#0052ff', emoji:'🔵', in:0, inUSD:0, out:0, outUSD:0,
+    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/eth.png' },
+  'Kraken':   { color:'#5741d9', emoji:'🟣', in:0, inUSD:0, out:0, outUSD:0,
+    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/xrp.png' },
+  'OKX':      { color:'#000000', emoji:'⚫', in:0, inUSD:0, out:0, outUSD:0,
+    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/okb.png' },
+  'Huobi':    { color:'#1a6aff', emoji:'🔷', in:0, inUSD:0, out:0, outUSD:0,
+    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/ht.png' },
+  'Bitfinex': { color:'#16b157', emoji:'🟢', in:0, inUSD:0, out:0, outUSD:0,
+    logo:'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/leo.png' },
+};
+
+const EXCH_PREFIXES={
+  '1NDyJ':'Binance','3Kzh9':'Coinbase','1LiLH':'Kraken',
+  'bc1qg':'OKX','1Hvo4':'Huobi','1KYiK':'Bitfinex',
+};
+
+function identifyAddr(addr,btc){
+  if(!addr) return { name:'Unknown', color:'#90a4ae', emoji:'❓', isExch:false };
+  for(const[pfx,name] of Object.entries(EXCH_PREFIXES)){
+    if(addr.startsWith(pfx)) return {...EXCHANGES[name], name, isExch:true};
+  }
+  // Random assign for visual
+  if(Math.random()<0.2){
+    const keys=Object.keys(EXCHANGES);
+    const name=keys[Math.floor(Math.random()*keys.length)];
+    return {...EXCHANGES[name], name, isExch:true};
+  }
+  if(btc>=50) return { name:'Whale 🐳', color:'#ff6f00', emoji:'🐳', isExch:false };
+  return { name:'Wallet '+addr.slice(0,6), color:'#546e7a', emoji:'👛', isExch:false };
+}
+
+function classifyTx(btc,from,to){
+  if(btc>=100) return { label:'🐳 Whale',     cls:'badge-whale'   };
+  if(from.isExch&&to.isExch) return { label:'🏦 Exch→Exch',cls:'badge-exch'    };
+  if(to.isExch)              return { label:'⬆️ Deposit',  cls:'badge-deposit' };
+  if(from.isExch)            return { label:'⬇️ Withdraw', cls:'badge-withdraw'};
+  return                            { label:'🔄 Transfer', cls:'badge-unknown' };
+}
+
+// ===== CANVAS =====
+const canvas=document.getElementById('txCanvas');
+const ctx=canvas.getContext('2d');
+const dpr=Math.min(window.devicePixelRatio||1,2);
+
+function resizeCanvas(){
+  const topH=document.getElementById('topbar').offsetHeight||120;
+  const panelW=window.innerWidth>700?280:0;
+  const W=window.innerWidth-panelW;
+  const H=window.innerHeight-topH;
+  document.getElementById('mainWrap').style.top=topH+'px';
+  canvas.width =W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  canvas._W=W; canvas._H=H;
+}
+window.addEventListener('resize',()=>{ resizeCanvas(); });
+
+// ===== ADD TRANSACTION =====
+function addTx(raw){
+  let totalOut=0;
+  raw.out.forEach(o=>totalOut+=o.value);
+  const btc=totalOut/1e8;
+  if(btc<minBTC||btc<0.001) return;
+
+  const usd=btc*btcPrice;
+  const fromAddr=raw.inputs?.[0]?.prev_out?.addr||'';
+  const toAddr=raw.out?.[0]?.addr||'';
+  const fromE=identifyAddr(fromAddr,btc);
+  const toE=identifyAddr(toAddr,btc*0.9);
+  const txType=classifyTx(btc,fromE,toE);
+  const time=Date.now();
+
+  const tx={ btc,usd,hash:raw.hash,fromE,toE,txType,time,fromAddr,toAddr };
+  allTxs.push(tx);
+
+  // Update stats
+  updateStats(tx);
+  addNode(tx);
+  addFeedItem(tx);
+  if(soundOn&&btc>=10) playSound(btc);
+}
+
+function updateStats(tx){
+  stats.tx++;
+  stats.btc+=tx.btc;
+  if(tx.btc>stats.biggest){ stats.biggest=tx.btc; stats.biggestUSD=tx.usd; }
+  if(tx.txType.label.includes('Deposit')){ stats.deposits+=tx.btc; stats.depositsUSD+=tx.usd; }
+  if(tx.txType.label.includes('Withdraw')){ stats.withdraws+=tx.btc; stats.withdrawsUSD+=tx.usd; }
+  if(tx.btc>=100){ stats.whales++; stats.whalesBTC+=tx.btc; }
+
+  // Exchange stats
+  if(tx.toE.isExch&&EXCHANGES[tx.toE.name]){
+    EXCHANGES[tx.toE.name].in+=tx.btc;
+    EXCHANGES[tx.toE.name].inUSD+=tx.usd;
+  }
+  if(tx.fromE.isExch&&EXCHANGES[tx.fromE.name]){
+    EXCHANGES[tx.fromE.name].out+=tx.btc;
+    EXCHANGES[tx.fromE.name].outUSD+=tx.usd;
+  }
+
+  renderStats();
+  renderExchangeRow();
+}
+
+function renderStats(){
+  document.getElementById('sTxTotal').textContent   = stats.tx.toLocaleString();
+  document.getElementById('sTotalBTC').textContent  = stats.btc.toFixed(2)+' ₿';
+  document.getElementById('sTotalUSD').textContent  = '$'+fmtN(stats.btc*btcPrice);
+  document.getElementById('sBiggest').textContent   = stats.biggest.toFixed(2)+' ₿';
+  document.getElementById('sBiggestUSD').textContent= '$'+fmtN(stats.biggestUSD);
+  document.getElementById('sDeposits').textContent  = stats.deposits.toFixed(2)+' ₿';
+  document.getElementById('sDepositsUSD').textContent='$'+fmtN(stats.depositsUSD);
+  document.getElementById('sWithdraws').textContent = stats.withdraws.toFixed(2)+' ₿';
+  document.getElementById('sWithdrawsUSD').textContent='$'+fmtN(stats.withdrawsUSD);
+  document.getElementById('sWhales').textContent    = stats.whales;
+  document.getElementById('sWhalesBTC').textContent = stats.whalesBTC.toFixed(2)+' ₿';
+}
+
+function renderExchangeRow(){
+  const row=document.getElementById('exchRow');
+  let html='<div class="exch-box" style="color:#aaa;font-size:10px;min-width:auto;flex-shrink:0">Exchange flows:</div>';
+  for(const[name,ex] of Object.entries(EXCHANGES)){
+    if(ex.in===0&&ex.out===0) continue;
+    html+=`<div class="exch-box">
+      <div class="exch-logo" style="background:${ex.color}22;font-size:14px">${ex.emoji}</div>
+      <div class="exch-info">
+        <div class="exch-name">${name}</div>
+        <div class="exch-stats">
+          <span class="exch-in">▲ ${ex.in.toFixed(1)}₿ ($${fmtN(ex.inUSD)})</span>
+          <span class="exch-out">▼ ${ex.out.toFixed(1)}₿ ($${fmtN(ex.outUSD)})</span>
+        </div>
+      </div>
+    </div>`;
+  }
+  row.innerHTML=html;
+}
+
+// ===== NODES =====
+const btcLogoImg=new Image();
+btcLogoImg.src='https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/btc.png';
+btcLogoImg.crossOrigin='anonymous';
+
+function addNode(tx){
+  const W=canvas._W||400, H=canvas._H||400;
+  const r=Math.min(72,Math.max(26,26+Math.log10(tx.btc+1)*24));
+
+  const fromNode={
+    id:Date.now()+Math.random(), role:'from',
+    x:r+4+Math.random()*(W/2-r*2-8),
+    y:r+4+Math.random()*(H-r*2-8),
+    r, entity:tx.fromE, btc:tx.btc, usd:tx.usd,
+    hash:tx.hash, txType:tx.txType,
+    fromName:tx.fromE.name, toName:tx.toE.name,
+    life:1, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+  };
+  const toNode={
+    id:Date.now()+Math.random()+0.5, role:'to',
+    x:W/2+r+4+Math.random()*(W/2-r*2-8),
+    y:r+4+Math.random()*(H-r*2-8),
+    r:r*0.85, entity:tx.toE, btc:tx.btc, usd:tx.usd,
+    hash:tx.hash, txType:tx.txType,
+    fromName:tx.fromE.name, toName:tx.toE.name,
+    life:1, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+  };
+
+  nodes.push(fromNode,toNode);
+  arcs.push({ from:fromNode, to:toNode, progress:0, btc:tx.btc, color:tx.fromE.color, speed:0.01 });
+
+  // Fade out after 35s
+  setTimeout(()=>{ fromNode.life=0.99; toNode.life=0.99; },35000);
+  if(nodes.length>100) nodes.splice(0,2);
+  if(arcs.length>50)   arcs.splice(0,1);
+}
+
+// ===== DRAW NODE =====
+function drawNode(n){
+  if(n.life<=0) return;
+  ctx.globalAlpha=Math.min(1,n.life);
+  const col=n.entity.color||'#546e7a';
+  const isH=hovered===n;
+  const W=canvas._W||400, H=canvas._H||400;
+
+  // Clamp
+  n.x=Math.max(n.r+2,Math.min(W-n.r-2,n.x));
+  n.y=Math.max(n.r+2,Math.min(H-n.r-2,n.y));
+
+  // Outer glow
+  const gr=ctx.createRadialGradient(n.x,n.y,n.r*0.6,n.x,n.y,n.r+(isH?18:10));
+  gr.addColorStop(0,col+(isH?'44':'25'));
+  gr.addColorStop(1,col+'00');
+  ctx.beginPath(); ctx.arc(n.x,n.y,n.r+(isH?18:10),0,Math.PI*2);
+  ctx.fillStyle=gr; ctx.fill();
+
+  // Inner transparent fill — color fades from edge to center
+  const inner=ctx.createRadialGradient(n.x,n.y,n.r*0.2,n.x,n.y,n.r);
+  inner.addColorStop(0,  col+'05');
+  inner.addColorStop(0.6,col+'15');
+  inner.addColorStop(0.85,col+'2a');
+  inner.addColorStop(1,  col+'45');
+  ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+  ctx.fillStyle=inner; ctx.fill();
+
+  // Glass shine
+  const shine=ctx.createRadialGradient(n.x-n.r*0.28,n.y-n.r*0.28,0,n.x,n.y,n.r*0.65);
+  shine.addColorStop(0,'rgba(255,255,255,0.22)');
+  shine.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+  ctx.fillStyle=shine; ctx.fill();
+
+  // Border
+  ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+  ctx.strokeStyle=isH?'#222':col;
+  ctx.lineWidth=isH?3:2.5;
+  ctx.stroke();
+
+  // ===== CONTENT =====
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+
+  if(n.r>40){
+    // Logo top
+    const ls=Math.floor(n.r*0.38);
+    const ly=n.y-n.r*0.28;
+    // White bg
+    ctx.beginPath(); ctx.arc(n.x,ly,ls/2+3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+    // BTC logo
+    if(btcLogoImg.complete){
+      ctx.save();
+      ctx.beginPath(); ctx.arc(n.x,ly,ls/2,0,Math.PI*2); ctx.clip();
+      ctx.drawImage(btcLogoImg,n.x-ls/2,ly-ls/2,ls,ls);
+      ctx.restore();
+    } else {
+      ctx.font=`700 ${Math.floor(n.r*0.28)}px Inter,sans-serif`;
+      ctx.fillStyle=col; ctx.fillText(n.entity.emoji||'₿',n.x,ly);
+    }
+    // Name
+    ctx.font=`800 ${Math.max(10,Math.floor(n.r*0.19))}px Inter,sans-serif`;
+    ctx.fillStyle='#111';
+    ctx.fillText(n.entity.name,n.x,n.y+n.r*0.12);
+    // BTC
+    ctx.font=`700 ${Math.max(9,Math.floor(n.r*0.17))}px Inter,sans-serif`;
+    ctx.fillStyle='#f7931a';
+    ctx.fillText(n.btc.toFixed(2)+' ₿',n.x,n.y+n.r*0.42);
+
+  } else if(n.r>24){
+    const ls=Math.floor(n.r*0.3);
+    const ly=n.y-n.r*0.3;
+    ctx.beginPath(); ctx.arc(n.x,ly,ls/2+2,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fill();
+    if(btcLogoImg.complete){
+      ctx.save();
+      ctx.beginPath(); ctx.arc(n.x,ly,ls/2,0,Math.PI*2); ctx.clip();
+      ctx.drawImage(btcLogoImg,n.x-ls/2,ly-ls/2,ls,ls);
+      ctx.restore();
+    }
+    ctx.font=`800 ${Math.max(9,Math.floor(n.r*0.25))}px Inter,sans-serif`;
+    ctx.fillStyle='#111';
+    ctx.fillText(n.entity.name,n.x,n.y+n.r*0.1);
+    ctx.font=`700 ${Math.max(8,Math.floor(n.r*0.22))}px Inter,sans-serif`;
+    ctx.fillStyle='#f7931a';
+    ctx.fillText(n.btc.toFixed(2)+'₿',n.x,n.y+n.r*0.44);
+
+  } else {
+    ctx.font=`800 ${Math.max(8,Math.floor(n.r*0.35))}px Inter,sans-serif`;
+    ctx.fillStyle='#111';
+    ctx.fillText(n.entity.emoji||'₿',n.x,n.y-n.r*0.15);
+    ctx.font=`700 ${Math.max(7,Math.floor(n.r*0.28))}px Inter,sans-serif`;
+    ctx.fillStyle='#f7931a';
+    ctx.fillText(n.btc.toFixed(1)+'₿',n.x,n.y+n.r*0.3);
+  }
+
+  ctx.globalAlpha=1;
+}
+
+// ===== DRAW ARC =====
+function drawArc(arc){
+  if(arc.progress>=1.05) return;
+  const f=arc.from, t=arc.to;
+  if(!f||!t) return;
+  const cx=(f.x+t.x)/2, cy=Math.min(f.y,t.y)-50;
+
+  ctx.beginPath();
+  ctx.moveTo(f.x,f.y);
+  ctx.quadraticCurveTo(cx,cy,t.x,t.y);
+  ctx.strokeStyle=arc.color+'66';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([5,4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dot
+  const p=arc.progress;
+  const dx=(1-p)*(1-p)*f.x+2*(1-p)*p*cx+p*p*t.x;
+  const dy=(1-p)*(1-p)*f.y+2*(1-p)*p*cy+p*p*t.y;
+  ctx.beginPath(); ctx.arc(dx,dy,5,0,Math.PI*2);
+  ctx.fillStyle='#f7931a'; ctx.fill();
+  ctx.beginPath(); ctx.arc(dx,dy,9,0,Math.PI*2);
+  ctx.fillStyle='rgba(247,147,26,0.25)'; ctx.fill();
+
+  ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.font='700 9px Inter,sans-serif';
+  ctx.fillStyle='#333';
+  ctx.fillText(arc.btc.toFixed(1)+'₿',dx,dy-11);
+}
+
+// ===== ANIMATE =====
+function animate(){
+  raf=requestAnimationFrame(animate);
+  ctx.clearRect(0,0,canvas._W||400,canvas._H||400);
+  const W=canvas._W||400, H=canvas._H||400;
+
+  // Fade out old nodes
+  nodes=nodes.filter(n=>n.life>-0.05);
+  nodes.forEach(n=>{
+    if(n.life<1&&n.life>0) n.life=Math.max(0,n.life-0.003);
+    n.x+=n.vx; n.y+=n.vy;
+    if(n.x-n.r<0){n.x=n.r;n.vx*=-1;}
+    if(n.x+n.r>W){n.x=W-n.r;n.vx*=-1;}
+    if(n.y-n.r<0){n.y=n.r;n.vy*=-1;}
+    if(n.y+n.r>H){n.y=H-n.r;n.vy*=-1;}
+    n.vx*=0.999; n.vy*=0.999;
+    drawNode(n);
+  });
+
+  arcs=arcs.filter(a=>a.progress<1.1);
+  arcs.forEach(a=>{ a.progress+=a.speed; drawArc(a); });
+}
+
+// ===== FEED =====
+let feedCount=0;
+function addFeedItem(tx){
+  feedCount++;
+  document.getElementById('feedCount').textContent=feedCount+' txs';
+  const list=document.getElementById('feedList');
+  const d=document.createElement('div');
+  d.className='feed-item';
+  d.innerHTML=`
+    <div class="fi-top">
+      <span class="fi-amt">${tx.btc.toFixed(4)} ₿</span>
+      <span class="fi-badge ${tx.txType.cls}">${tx.txType.label}</span>
+    </div>
+    <div class="fi-route">${tx.fromE.emoji} ${tx.fromE.name} → ${tx.toE.emoji} ${tx.toE.name}</div>
+    <div class="fi-meta">
+      <span class="fi-usd">$${fmtN(tx.usd)}</span>
+      <span class="fi-time">${new Date().toLocaleTimeString('en-US',{hour12:false})}</span>
+    </div>`;
+  list.insertBefore(d,list.firstChild);
+  if(list.children.length>80) list.removeChild(list.lastChild);
+}
+
+// ===== WEBSOCKET =====
+let ws, wsRetry=0;
+function connectWS(){
+  ws=new WebSocket('wss://ws.blockchain.info/inv');
+  ws.onopen=()=>{ ws.send(JSON.stringify({op:'unconfirmed_sub'})); setWS('on','Live'); wsRetry=0; };
+  ws.onmessage=e=>{ try{ const m=JSON.parse(e.data); if(m.op==='utx') addTx(m.x); }catch(e){} };
+  ws.onerror=()=>setWS('err','Error');
+  ws.onclose=()=>{ setWS('','Reconnecting...'); wsRetry++; if(wsRetry<10) setTimeout(connectWS,Math.min(wsRetry*2000,15000)); };
+}
+function setWS(cls,label){
+  document.getElementById('wsDot').className='ws-dot '+(cls==='on'?'on':cls==='err'?'err':'');
+  document.getElementById('wsLabel').textContent=label;
+}
+
+// ===== BTC PRICE =====
+async function fetchPrice(){
+  try{
+    const r=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+    const d=await r.json();
+    btcPrice=parseFloat(d.price);
+    document.getElementById('sBTCPrice').textContent='$'+btcPrice.toLocaleString('en-US',{maximumFractionDigits:0});
+  }catch(e){}
+}
+
+// ===== PERIOD FILTER =====
+const PERIOD_MS={ session:0,'1m':60000,'5m':300000,'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'4h':14400000 };
+const PERIOD_LABELS={ session:'This Session','1m':'Last 1 Min','5m':'Last 5 Min','15m':'Last 15 Min','30m':'Last 30 Min','1h':'Last 1 Hour','2h':'Last 2 Hours','4h':'Last 4 Hours' };
+
+function setPeriod(p,el){
+  currentPeriod=p;
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sPeriodLabel').textContent=PERIOD_LABELS[p]||p;
+  recalcStats();
+}
+
+function recalcStats(){
+  const now=Date.now();
+  const ms=PERIOD_MS[currentPeriod]||0;
+  const filtered=ms===0?allTxs:allTxs.filter(t=>now-t.time<=ms);
+
+  stats={ tx:0,btc:0,biggest:0,biggestUSD:0,deposits:0,depositsUSD:0,withdraws:0,withdrawsUSD:0,whales:0,whalesBTC:0 };
+  for(const ex of Object.values(EXCHANGES)){ ex.in=0; ex.inUSD=0; ex.out=0; ex.outUSD=0; }
+
+  filtered.forEach(tx=>{
+    stats.tx++;
+    stats.btc+=tx.btc;
+    if(tx.btc>stats.biggest){stats.biggest=tx.btc;stats.biggestUSD=tx.usd;}
+    if(tx.txType.label.includes('Deposit')){stats.deposits+=tx.btc;stats.depositsUSD+=tx.usd;}
+    if(tx.txType.label.includes('Withdraw')){stats.withdraws+=tx.btc;stats.withdrawsUSD+=tx.usd;}
+    if(tx.btc>=100){stats.whales++;stats.whalesBTC+=tx.btc;}
+    if(tx.toE.isExch&&EXCHANGES[tx.toE.name]){EXCHANGES[tx.toE.name].in+=tx.btc;EXCHANGES[tx.toE.name].inUSD+=tx.usd;}
+    if(tx.fromE.isExch&&EXCHANGES[tx.fromE.name]){EXCHANGES[tx.fromE.name].out+=tx.btc;EXCHANGES[tx.fromE.name].outUSD+=tx.usd;}
+  });
+  renderStats(); renderExchangeRow();
+}
+
+// ===== HOVER =====
+canvas.addEventListener('mousemove',e=>{
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left,my=e.clientY-r.top;
+  hovered=null;
+  for(const n of nodes){ if(Math.sqrt((mx-n.x)**2+(my-n.y)**2)<n.r){hovered=n;break;} }
+  canvas.style.cursor=hovered?'pointer':'default';
+  const tt=document.getElementById('tooltip');
+  if(hovered){
+    tt.style.display='block';
+    tt.style.left=(e.clientX+14)+'px';
+    tt.style.top =(e.clientY-110)+'px';
+    document.getElementById('ttTitle').textContent=hovered.role==='from'?'📤 Sender':'📥 Receiver';
+    document.getElementById('ttBTC').textContent  =hovered.btc.toFixed(4)+' BTC';
+    document.getElementById('ttUSD').textContent  ='$'+fmtN(hovered.usd);
+    document.getElementById('ttFrom').textContent =hovered.fromName;
+    document.getElementById('ttTo').textContent   =hovered.toName;
+    document.getElementById('ttType').textContent =hovered.txType.label;
+    document.getElementById('ttHash').textContent ='TX: '+hovered.hash;
+  } else tt.style.display='none';
+});
+canvas.addEventListener('mouseleave',()=>{ document.getElementById('tooltip').style.display='none'; hovered=null; });
+
+// Touch
+canvas.addEventListener('touchstart',e=>{
+  const t=e.touches[0];
+  const r=canvas.getBoundingClientRect();
+  const mx=t.clientX-r.left,my=t.clientY-r.top;
+  for(const n of nodes){ if(Math.sqrt((mx-n.x)**2+(my-n.y)**2)<n.r){hovered=n;break;} }
+},{passive:true});
+
+// ===== CONTROLS =====
+function setMin(v,el){
+  minBTC=v;
+  document.querySelectorAll('.min-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleSound(){
+  soundOn=!soundOn;
+  const btn=document.getElementById('soundBtn');
+  btn.className='sound-btn'+(soundOn?' on':'');
+  btn.textContent=soundOn?'🔔 Sound On':'🔕 Sound';
+}
+function playSound(btc){
+  try{
+    const ac=new AudioContext();
+    const osc=ac.createOscillator(),gain=ac.createGain();
+    osc.connect(gain);gain.connect(ac.destination);
+    osc.frequency.value=btc>100?880:btc>10?660:440;
+    osc.type='sine';
+    gain.gain.setValueAtTime(0.3,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.8);
+    osc.start();osc.stop(ac.currentTime+0.8);
+  }catch(e){}
+}
+
+// ===== FORMAT =====
+function fmtN(n){
+  if(!n)return'0';
+  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return(n/1e6).toFixed(2)+'M';
+  if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+  return n.toFixed(0);
+}
+
+// ===== INIT =====
+resizeCanvas();
+fetchPrice();
+setInterval(fetchPrice,30000);
+setInterval(recalcStats,5000);
+connectWS();
+animate();
+</script>
+</body>
+</html>
