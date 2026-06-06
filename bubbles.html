@@ -270,37 +270,48 @@ function buildBubbles() {
 
 function dist(a,b){ const dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
 
-// ===== COLOR =====
+// ===== COLOR WITH NEON EFFECT =====
 function bubbleColor(v, isDragging = false) {
   if (!v && v !== 0) return { fill: '#757575', border: '#bdbdbd' };
 
-    // Agar bubble active/dragging hai toh background gray aur border pure white ho jaye
+  // Agar bubble active/dragging hai toh background white/gray aur border stroke handling
   if (isDragging) {
-    return { fill: '#ff0000', border: '#5f5f5f' }; // Dono (Gain/Loss) ke liye background gray aur border pure white
+    return { fill: '#ffffff', border: '#5f5f5f' };
   }
 
-  // Baqi saare aam bubbles ke liye wahi normal dynamic scale chalay ga
+  // Pure list ke changes nikal kar max gain aur max loss find karna
   const absChanges = allCoins.map(c => c[currentTF] || 0);
   const maxGain = Math.max(...absChanges, 0.1);
   const maxLoss = Math.abs(Math.min(...absChanges, -0.1));
 
   if (v >= 0) {
+    // GAINERS: Jitna bara gainer, utna bright neon green
     const intensity = maxGain > 0 ? Math.min(v / maxGain, 1) : 0;
-    const lightness = 75 - (intensity * 45); 
+    
+    // Neon Green base hue 120 hota hai. 
+    // Kam gainer thoda dark green hoga, top gainer full bright neon (50% lightness) ho jayega.
+    const lightness = 20 + (intensity * 30); 
+    
     return {
-      fill: `hsl(135, 75%, ${lightness + 10}%)`,
-      border: `hsl(135, 80%, ${lightness}%)`
+      fill: `hsl(120, 100%, ${lightness}%)`,
+      border: `hsl(120, 100%, 60%)` // Border ko hamesha sharp neon rakha hai
     };
   } else {
+    // LOSERS: Jitna bara loser, utna bright neon red
     const absV = Math.abs(v);
     const intensity = maxLoss > 0 ? Math.min(absV / maxLoss, 1) : 0;
-    const lightness = 90 - (intensity * 40);
+    
+    // Neon Red base hue 0 hota hai.
+    // Kam loss wala dark red, aur top loser full radiant neon red ho jayega.
+    const lightness = 25 + (intensity * 30);
+    
     return {
-      fill: `hsl(0, 75%, ${lightness + 10}%)`,
-      border: `hsl(0, 80%, ${lightness}%)`
+      fill: `hsl(0, 100%, ${lightness}%)`,
+      border: `hsl(0, 100%, 65%)` // Border sharp neon red
     };
   }
 }
+
 
 // ===== DRAW =====
 function drawBubble(b) {
