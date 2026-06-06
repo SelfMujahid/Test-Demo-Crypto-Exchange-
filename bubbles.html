@@ -117,6 +117,8 @@ const ctx    = canvas.getContext('2d');
 
 let allCoins=[], bubbles=[], currentTF='c24h', currentFilter='all';
 let hovered=null, raf=null;
+// FIX: Drop hone wale bubble ko 5 seconds tak active rakhne ke liye variables
+let lastDragged=null, dragTimeout=null;
 
 // Coins dynamically fetched from Binance
 
@@ -269,35 +271,30 @@ function buildBubbles() {
 function dist(a,b){ const dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
 
 // ===== COLOR =====
-function bubbleColor(v) {
-  // Agar values load nahi huin ya zero hain toh neutral grey return karein
+function bubbleColor(v, isDragging = false) {
   if (!v && v !== 0) return { fill: '#757575', border: '#bdbdbd' };
 
-  // Pure list mein se max gain aur max loss dhoondain ranges set karne ke liye
+    // Agar bubble active/dragging hai toh background gray aur border pure white ho jaye
+  if (isDragging) {
+    return { fill: '#e0e0e0', border: '#ffffff' }; // Dono (Gain/Loss) ke liye background gray aur border pure white
+  }
+
+  // Baqi saare aam bubbles ke liye wahi normal dynamic scale chalay ga
   const absChanges = allCoins.map(c => c[currentTF] || 0);
   const maxGain = Math.max(...absChanges, 0.1);
   const maxLoss = Math.abs(Math.min(...absChanges, -0.1));
 
   if (v >= 0) {
-    // GREEN SIDE: Kitna % bada gain hai? (0 se 1 ke darmian value)
     const intensity = maxGain > 0 ? Math.min(v / maxGain, 1) : 0;
-    
-    // Lightness ko intensity ke mutabik adjust karein (jitna zyada gain, utna bright green)
-    // 30% full bright green hai, 75% halka green hai
     const lightness = 75 - (intensity * 45); 
-    
     return {
       fill: `hsl(135, 75%, ${lightness + 10}%)`,
       border: `hsl(135, 80%, ${lightness}%)`
     };
   } else {
-    // RED SIDE: Kitna % bada loss hai?
     const absV = Math.abs(v);
     const intensity = maxLoss > 0 ? Math.min(absV / maxLoss, 1) : 0;
-    
-    // Jitter kam hone par dark/faded red, zyada loss par full bright red (35%)
-    const lightness = 75 - (intensity * 40);
-    
+    const lightness = 90 - (intensity * 40);
     return {
       fill: `hsl(0, 75%, ${lightness + 10}%)`,
       border: `hsl(0, 80%, ${lightness}%)`
@@ -308,21 +305,41 @@ function bubbleColor(v) {
 // ===== DRAW =====
 function drawBubble(b) {
   const chg = b[currentTF];
-  const col = bubbleColor(chg); // Dynamic color mila
-  const isH = hovered===b;
+  // FIX: Bubble tab tak active dikhega jab tak drag ho raha hai YA uske 5 seconds poore nahi hote
+  const isActive = (dragging === b) || (lastDragged === b); 
+  const col = bubbleColor(chg, isActive); 
+  const isH = hovered===b || isActive;
 
-  // 1. Inner fill — Dynamic border color ka hi transparent block bany ga
+    // 1. Inner fill — Dynamic border color ka hi transparent block bany ga
   ctx.save();
   ctx.beginPath();
   ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
   ctx.clip();
 
+   // FIX: Agar drag ho raha hai toh background ko solid gray karo aur border ke andar white inner shadow lagao
+  if (isActive) {
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fill();
+
+    // Inner shadow configuration (Sirf andar ki taraf glow karega)
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#ffffff';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.stroke(); // Yeh stroke clip ke andar hai, isliye shadow sirf andar banega
+    
+    // Shadow reset taake baqi elements kharab na hon
+    ctx.shadowBlur = 0;
+  }
+
   // Ab static RGB ke bajaye seedha border ka dynamic color background par transparently base karega
   const innerGrad = ctx.createRadialGradient(b.x, b.y, b.r*0.3, b.x, b.y, b.r);
-  innerGrad.addColorStop(0,   'rgba(255,255,255,0.0)');
-  innerGrad.addColorStop(0.65, col.border.replace('hsl', 'hsla').replace(')', ', 0.32)'));
-  innerGrad.addColorStop(0.85, col.border.replace('hsl', 'hsla').replace(')', ', 0.52)'));
-  innerGrad.addColorStop(1.0,  col.border.replace('hsl', 'hsla').replace(')', ', 0.9)'));
+
+  // Agar drag ho raha hai toh gradient ko solid rakhein warna normal glass effect dein
+  innerGrad.addColorStop(0,   isActive ? '#e0e0e0' : 'rgba(255,255,255,0.0)');
+  innerGrad.addColorStop(0.65, isActive ? '#e0e0e0' : col.border.replace('hsl', 'hsla').replace(')', ', 0.08)'));
+  innerGrad.addColorStop(0.85, isActive ? '#e0e0e0' : col.border.replace('hsl', 'hsla').replace(')', ', 0.22)'));
+  innerGrad.addColorStop(1.0,  isActive ? '#e0e0e0' : col.border.replace('hsl', 'hsla').replace(')', ', 0.40)'));
   ctx.fillStyle = innerGrad;
   ctx.fillRect(b.x-b.r, b.y-b.r, b.r*2, b.r*2);
 
@@ -341,8 +358,9 @@ function drawBubble(b) {
   // 2. Border — colored stroke
   ctx.beginPath();
   ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-  ctx.strokeStyle = isH ? '#222' : col.border;
-  ctx.lineWidth   = isH ? 3 : 2;
+  // Hamesha original dynamic red/green color uthaye ga bina black shading ke
+  ctx.strokeStyle = col.border; 
+  ctx.lineWidth   = isActive ? 3.5 : 2; // Active hone par border thick aur prominent ho jaye
   ctx.stroke();
 
   // ===== TEXT =====
@@ -362,7 +380,7 @@ function drawBubble(b) {
     // White circle bg for logo
     ctx.beginPath();
     ctx.arc(b.x,ly,ls/2+3,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.9)';
+        ctx.fillStyle='rgba(255,255,255,0.85)'; // Dono jagah par isi tarah badal dein
     ctx.fill();
 
     if(b.imgOk && b.img){
@@ -481,8 +499,20 @@ function animate(){
     b.vx *= 0.98;
     b.vy *= 0.98;
 
-    drawBubble(b);
+    // FIX: Agar yeh bubble active hai toh isay loop mein draw nahi karenge (aakhri layer ke liye bacha kar rakhenge)
+    if (dragging === b || lastDragged === b) {
+      // Loop isay skip kar dega
+    } else {
+      drawBubble(b); 
+    }
   });
+
+  // FIX: Active bubble ko loop ke mukammal khatam hone ke baad sab se END par draw kiya taake yeh hamesha TOP par rahe
+  if (dragging) {
+    drawBubble(dragging);
+  } else if (lastDragged) {
+    drawBubble(lastDragged);
+  }
 }
 
 // ===== RESIZE =====
@@ -535,14 +565,20 @@ canvas.addEventListener('mouseleave',()=>{
 // ===== TOUCH DRAG =====
 let dragging=null, dragOffX=0, dragOffY=0;
 
+// Dono puraane touchstart blocks mita kar sirf yeh aik block rukhna hai
 canvas.addEventListener('touchstart', e=>{
   e.preventDefault();
   const t=e.touches[0];
   const r=canvas.getBoundingClientRect();
   const tx=t.clientX-r.left, ty=t.clientY-r.top;
+  
+  dragging = null; 
+  hovered = null;
+
   for(const b of bubbles){
     if(Math.sqrt((tx-b.x)**2+(ty-b.y)**2)<b.r){
       dragging=b;
+      hovered=b; // Mobile touch par layering top karne ke liye zaroori hai
       dragOffX=tx-b.x;
       dragOffY=ty-b.y;
       b.vx=0; b.vy=0;
@@ -554,21 +590,38 @@ canvas.addEventListener('touchstart', e=>{
 canvas.addEventListener('touchmove', e=>{
   e.preventDefault();
   if(!dragging) return;
+  
+  // FIX: Touch move ke dauran bhi isay hovered rakhein taake yeh hamesha top layer par rahe
+  hovered = dragging; 
+  
   const t=e.touches[0];
   const r=canvas.getBoundingClientRect();
   dragging.x = t.clientX - r.left - dragOffX;
   dragging.y = t.clientY - r.top  - dragOffY;
+
   // clamp
-  dragging.x = Math.max(dragging.r, Math.min(canvas.width -dragging.r, dragging.x));
+    dragging.x = Math.max(dragging.r, Math.min(canvas.width -dragging.r, dragging.x));
   dragging.y = Math.max(dragging.r, Math.min(canvas.height-dragging.r, dragging.y));
 },{passive:false});
 
+// FIX: Drop karne par background aur layer wapas normal karne ke liye yeh add kiya
 canvas.addEventListener('touchend', e=>{
   if(dragging){
-    // Give slight velocity on release
     dragging.vx = (Math.random()-0.5)*0.15;
     dragging.vy = (Math.random()-0.5)*0.15;
-    dragging=null;
+    
+    // FIX: Purana koi chal raha timer clear karein
+    if(dragTimeout) clearTimeout(dragTimeout);
+    
+    // Is bubble ko lastDragged ghoshit karein taake yeh active state mein rahe
+    lastDragged = dragging; 
+    dragging = null;
+    hovered = null; 
+
+    // Exact 5 seconds baad bubble ko wapas normal state mein bhej dein
+    dragTimeout = setTimeout(() => {
+      lastDragged = null;
+    }, 5000); 
   }
 });
 
