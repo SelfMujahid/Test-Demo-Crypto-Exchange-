@@ -46,34 +46,42 @@
             
             /* High spread white spray (Top position) + 15% opacity white mix layer for blur activation */
             background: 
-                radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.45) 0%, transparent 80%),
+                radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.8) 0%, transparent 80%),
                 linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15));
             
             backdrop-filter: blur(45px) saturate(150%);
             -webkit-backdrop-filter: blur(45px) saturate(150%);
         }
 
-        /* Top Dashboard Header Layout - Isko Glassmorphism style diya hai taqe BG ke sath match kare */
+        /* --- LAYER 3: UPDATED BLURRY DASHBOARD BOX --- */
         .dashboard-header {
             position: absolute;
             top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            /* Background ko semi-transparent kiya hai taqe peeche ka blur aur neon haseen dikhe */
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 12px 20px;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            z-index: 100;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            
+            /* Transparent black tint to activate glass visibility over white shadows */
+            background: rgba(0, 0, 0, 0.06);
+            
+            /* Extra High Glass Blur Effect embedded */
+            backdrop-filter: blur(35px) saturate(140%);
+            -webkit-backdrop-filter: blur(35px) saturate(140%);
+            
+            /* Sleek transparent border layout */
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            
+            /* --- PREMIUM WHITE SHADOW INJECTED --- */
+            box-shadow: 0 15px 35px rgba(255, 255, 255, 0.9), 0 5px 15px rgba(255, 255, 255, 0.5);
+            
+            padding: 15px 20px;
+            border-radius: 16px;
             display: flex;
-            gap: 20px;
-            text-align: center;
+            flex-direction: column;
+            gap: 12px;
             width: 90%;
-            max-width: 450px;
-            justify-content: space-between;
+            max-width: 650px;
+            text-align: center;
+            z-index: 100;
         }
 
         .stat-box {
@@ -85,14 +93,15 @@
 
         .stat-label {
             font-size: 10px;
-            color: #5c626a; /* Color contrast glass look ke liye thoda dark kiya */
+            color: #6c757d; /* Dark gray for visible readability over white glow layout */
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
             margin-bottom: 3px;
+            font-weight: 600;
         }
 
         .stat-value {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             color: #1e2022;
             display: flex;
@@ -246,6 +255,26 @@
             margin-bottom: 1px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.15);
         }
+
+        /* Classes for inner categories metrics */
+        .cat-title {
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .cat-count {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e2022;
+        }
+        .cat-btc {
+            font-size: 9px;
+            color: #444;
+        }
+        .cat-usd {
+            font-size: 8px;
+            color: #03a66d;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -253,8 +282,8 @@
     <div id="neon-base-layer"></div>
     <div class="blury-front-layer"></div>
 
-
-    <div class="dashboard-header" style="flex-direction: column; gap: 12px; max-width: 650px;">
+    <div class="dashboard-header">
+        
         <div style="display: flex; width: 100%; justify-content: space-between; gap: 10px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); padding-bottom: 8px;">
             <div class="stat-box">
                 <div class="stat-label">BTC Price</div>
@@ -273,28 +302,28 @@
 
         <div style="display: flex; width: 100%; justify-content: space-between; gap: 5px; text-align: center;">
             <div style="flex: 1;">
-                <div style="font-size: 10px; font-weight: bold; color: #dc2626;">🔥 Red (>50)</div>
-                <div id="count-red" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
-                <div id="btc-red" style="font-size: 9px; color: #444;">0.00 ₿</div>
-                <div id="usd-red" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+                <div class="cat-title" style="color: #dc2626;">🔥 Red (>50)</div>
+                <div id="count-red" class="cat-count">0</div>
+                <div id="btc-red" class="cat-btc">0.00 ₿</div>
+                <div id="usd-red" class="cat-usd">$0</div>
             </div>
             <div style="flex: 1; border-left: 1px solid rgba(0, 0, 0, 0.05);">
-                <div style="font-size: 10px; font-weight: bold; color: #ea580c;">⚡ Yellow (10-50)</div>
-                <div id="count-yellow" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
-                <div id="btc-yellow" style="font-size: 9px; color: #444;">0.00 ₿</div>
-                <div id="usd-yellow" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+                <div class="cat-title" style="color: #ea580c;">⚡ Yellow (10-50)</div>
+                <div id="count-yellow" class="cat-count">0</div>
+                <div id="btc-yellow" class="cat-btc">0.00 ₿</div>
+                <div id="usd-yellow" class="cat-usd">$0</div>
             </div>
             <div style="flex: 1; border-left: 1px solid rgba(0, 0, 0, 0.05);">
-                <div style="font-size: 10px; font-weight: bold; color: #1d4ed8;">💧 Blue (1-10)</div>
-                <div id="count-blue" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
-                <div id="btc-blue" style="font-size: 9px; color: #444;">0.00 ₿</div>
-                <div id="usd-blue" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+                <div class="cat-title" style="color: #1d4ed8;">💧 Blue (1-10)</div>
+                <div id="count-blue" class="cat-count">0</div>
+                <div id="btc-blue" class="cat-btc">0.00 ₿</div>
+                <div id="usd-blue" class="cat-usd">$0</div>
             </div>
             <div style="flex: 1; border-left: 1px solid rgba(0, 0, 0, 0.05);">
-                <div style="font-size: 10px; font-weight: bold; color: #0369a1;">🌊 Water (<1)</div>
-                <div id="count-water" style="font-size: 11px; font-weight: 700; color: #1e2022;">0</div>
-                <div id="btc-water" style="font-size: 9px; color: #444;">0.00 ₿</div>
-                <div id="usd-water" style="font-size: 8px; color: #03a66d; font-weight: 600;">$0</div>
+                <div class="cat-title" style="color: #0369a1;">🌊 Water (<1)</div>
+                <div id="count-water" class="cat-count">0</div>
+                <div id="btc-water" class="cat-btc">0.00 ₿</div>
+                <div id="usd-water" class="cat-usd">$0</div>
             </div>
         </div>
     </div>
