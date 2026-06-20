@@ -286,28 +286,33 @@ function renderHomeBalance(){
 }
 
 // ===== UI MENUS =====
-function toggleVisualMenu(e){
-  e.preventDefault();
-  const m=document.getElementById('visualMenu');
-  if(!m) return;
-  const r=e.currentTarget.getBoundingClientRect();
-  m.style.top=(r.bottom+6)+'px';
-  m.style.left=r.left+'px';
-  m.style.display=m.style.display==='none'?'block':'none';
+function toggleVisualMenu(event) {
+    event.preventDefault();
+
+    const menu = document.getElementById('visualMenu');
+    const btn = event.currentTarget;
+    const rect = btn.getBoundingClientRect();
+
+    const menuWidth = 130;
+    const padding = 10;
+
+    let left = rect.right;
+    let top = rect.bottom - 50;
+
+    const screenWidth = window.innerWidth;
+
+    if (left + menuWidth > screenWidth) {
+        left = screenWidth - menuWidth - padding;
+    }
+
+    if (left < padding) {
+        left = padding;
+    }
+
+    menu.style.display = 'block';
+    menu.style.position = 'fixed';
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+
+    btn.classList.add('active');
 }
-
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#visualMenu') && !e.target.textContent.includes('Visual')) {
-    const m = document.getElementById('visualMenu');
-    if(m) m.style.display='none';
-  }
-});
-
-// ===== INIT =====
-document.addEventListener('DOMContentLoaded', () => {
-  fetchTop100();
-  fetchFearGreed();
-  renderHomeBalance();
-  setInterval(fetchTop100, 60000);
-  setInterval(renderHomeBalance, 3000);
-});
