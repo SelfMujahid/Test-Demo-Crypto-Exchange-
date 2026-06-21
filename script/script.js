@@ -329,7 +329,6 @@ function toggleVisualMenu(event) {
     const menu = document.getElementById('visualMenu');
     const btn = event.currentTarget;
 
-    // Toggle close
     if (menu.style.display === 'block') {
         menu.style.display = 'none';
         btn.classList.remove('active');
@@ -362,7 +361,6 @@ function toggleVisualMenu(event) {
     btn.classList.add('active');
 }
 
-// Screen par kahin bhi click ho to menu close
 document.addEventListener('click', function () {
     const menu = document.getElementById('visualMenu');
 
@@ -375,7 +373,23 @@ document.addEventListener('click', function () {
     });
 });
 
-// Menu ke andar click karne se close na ho
 document.getElementById('visualMenu').addEventListener('click', function (event) {
     event.stopPropagation();
 });
+// ===== INIT — THIS WAS MISSING ENTIRELY =====
+// Nothing in this file was ever being called. fetchTop100() existed but was
+// never invoked, so allCoins stayed empty forever and #coinList just sat on
+// its static "loading..." HTML — regardless of whether Binance/CoinGecko
+// worked or not. Same for renderHomeBalance() and the search box listener.
+// Script tag is already at the bottom of <body> in index.html, so the DOM
+// is guaranteed ready here — no need to wait for DOMContentLoaded.
+fetchTop100();
+renderHomeBalance();
+
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+  searchInput.addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    renderList();
+  });
+}
