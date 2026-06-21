@@ -609,9 +609,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function toggleVisualMenu(event) {
     event.preventDefault();
+    event.stopPropagation();
 
     const menu = document.getElementById('visualMenu');
     const btn = event.currentTarget;
+
+    // Toggle close
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+        btn.classList.remove('active');
+        return;
+    }
+
     const rect = btn.getBoundingClientRect();
 
     const menuWidth = 130;
@@ -637,3 +646,21 @@ function toggleVisualMenu(event) {
 
     btn.classList.add('active');
 }
+
+// Screen par kahin bhi click ho to menu close
+document.addEventListener('click', function () {
+    const menu = document.getElementById('visualMenu');
+
+    if (menu) {
+        menu.style.display = 'none';
+    }
+
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+});
+
+// Menu ke andar click karne se close na ho
+document.getElementById('visualMenu').addEventListener('click', function (event) {
+    event.stopPropagation();
+});
