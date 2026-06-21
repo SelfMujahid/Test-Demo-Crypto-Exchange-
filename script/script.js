@@ -323,50 +323,59 @@ function renderHomeBalance() {
 
 // ===== UI MENUS =====
 function toggleVisualMenu(event) {
-  event.preventDefault();
+    event.preventDefault();
+    event.stopPropagation();
 
-  const menu = document.getElementById('visualMenu');
-  const btn = event.currentTarget;
-  const rect = btn.getBoundingClientRect();
+    const menu = document.getElementById('visualMenu');
+    const btn = event.currentTarget;
 
-  const menuWidth = 130;
-  const padding = 10;
+    // Toggle close
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+        btn.classList.remove('active');
+        return;
+    }
 
-  let left = rect.right;
-  let top = rect.bottom - 50;
+    const rect = btn.getBoundingClientRect();
 
-  const screenWidth = window.innerWidth;
+    const menuWidth = 130;
+    const padding = 10;
 
-  if (left + menuWidth > screenWidth) {
-    left = screenWidth - menuWidth - padding;
-  }
+    let left = rect.right;
+    let top = rect.bottom - 50;
 
-  if (left < padding) {
-    left = padding;
-  }
+    const screenWidth = window.innerWidth;
 
-  menu.style.display = 'block';
-  menu.style.position = 'fixed';
-  menu.style.left = left + 'px';
-  menu.style.top = top + 'px';
+    if (left + menuWidth > screenWidth) {
+        left = screenWidth - menuWidth - padding;
+    }
 
-  btn.classList.add('active');
+    if (left < padding) {
+        left = padding;
+    }
+
+    menu.style.display = 'block';
+    menu.style.position = 'fixed';
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+
+    btn.classList.add('active');
 }
 
-// ===== INIT — THIS WAS MISSING ENTIRELY =====
-// Nothing in this file was ever being called. fetchTop100() existed but was
-// never invoked, so allCoins stayed empty forever and #coinList just sat on
-// its static "loading..." HTML — regardless of whether Binance/CoinGecko
-// worked or not. Same for renderHomeBalance() and the search box listener.
-// Script tag is already at the bottom of <body> in index.html, so the DOM
-// is guaranteed ready here — no need to wait for DOMContentLoaded.
-fetchTop100();
-renderHomeBalance();
+// Screen par kahin bhi click ho to menu close
+document.addEventListener('click', function () {
+    const menu = document.getElementById('visualMenu');
 
-const searchInput = document.getElementById('searchInput');
-if (searchInput) {
-  searchInput.addEventListener('input', e => {
-    searchQuery = e.target.value.trim();
-    renderList();
-  });
-}
+    if (menu) {
+        menu.style.display = 'none';
+    }
+
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+});
+
+// Menu ke andar click karne se close na ho
+document.getElementById('visualMenu').addEventListener('click', function (event) {
+    event.stopPropagation();
+});
