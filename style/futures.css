@@ -93,7 +93,7 @@ header { position: sticky; top: 0; z-index: 200; background: rgba(255,255,255,0.
 .menu-btn {
     color: #000;
     text-decoration: none;
-    padding: 8px 18px;
+    padding: 5px 13px;
     border-radius: 20px;
     font-weight: 500;
     display: flex;
