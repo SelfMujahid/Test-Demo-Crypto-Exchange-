@@ -71,8 +71,9 @@ async function fetchAllPairs() {
       ).join('');
       
       // CSS Box Size Fix: Select box ko bohot bada hone se rokne ke liye inline override
-      pairSel.style.maxWidth = "130px";
-      pairSel.style.textOverflow = "ellipsis";
+      pairSel.style.maxWidth = "none";
+      pairSel.style.width = "auto";
+      pairSel.style.textOverflow = "clip";
     }
     if (pairLoadStatus) pairLoadStatus.textContent = usdtPairs.length + ' pairs';
     
@@ -605,3 +606,34 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(renderOB, 1500);
   setInterval(renderRecentTrades, 2500);
 });
+
+function toggleVisualMenu(event) {
+    event.preventDefault();
+
+    const menu = document.getElementById('visualMenu');
+    const btn = event.currentTarget;
+    const rect = btn.getBoundingClientRect();
+
+    const menuWidth = 130;
+    const padding = 10;
+
+    let left = rect.right;
+    let top = rect.bottom - 50;
+
+    const screenWidth = window.innerWidth;
+
+    if (left + menuWidth > screenWidth) {
+        left = screenWidth - menuWidth - padding;
+    }
+
+    if (left < padding) {
+        left = padding;
+    }
+
+    menu.style.display = 'block';
+    menu.style.position = 'fixed';
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+
+    btn.classList.add('active');
+}
