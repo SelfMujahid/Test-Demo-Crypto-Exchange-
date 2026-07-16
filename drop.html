@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestExchange — Drops</title>
+  <link rel="stylesheet" href="assets/css/drop.css">
+</head>
+<body>
+
+  <!-- BACKGROUND LAYERS -->
+  <div id="neon-base-layer"></div>
+  <div class="blury-front-layer"></div>
+
+  <!-- BACK BUTTON — matches site's 3D menu button style -->
+  <a href="index.html" class="back-btn">← Back</a>
+
+  <!-- DASHBOARD HEADER -->
+  <div class="dashboard-header">
+
+    <div style="display:flex;width:100%;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(0,0,0,0.08);padding-bottom:8px;">
+      <div class="stat-box">
+        <div class="stat-label">BTC Price</div>
+        <div class="stat-value">
+          <span class="btc-logo">₿</span>
+          <span id="btc-price-display">Fetching...</span>
+        </div>
+      </div>
+      <div class="stat-box" style="border-left:1px solid rgba(0,0,0,0.08);padding-left:10px;">
+        <div class="stat-label">⏱️ Open Time</div>
+        <div class="stat-value" id="timer-display">00:00</div>
+      </div>
+      <div class="stat-box" style="border-left:1px solid rgba(0,0,0,0.08);padding-left:10px;">
+        <div class="stat-label">🌧️ Total Rained</div>
+        <div class="stat-value" id="total-btc-display">0.00 BTC</div>
+        <div class="stat-label" id="total-usd-display"
+          style="margin-top:2px;text-transform:none;font-weight:600;color:#03a66d;font-size:10px;">$0</div>
+      </div>
+    </div>
+
+    <div style="display:flex;width:100%;justify-content:space-between;gap:5px;text-align:center;">
+      <div style="flex:1;">
+        <div class="cat-title" style="color:#dc2626;">🔥 Red (&gt;50)</div>
+        <div id="count-red"   class="cat-count">0</div>
+        <div id="btc-red"     class="cat-btc">0.00 ₿</div>
+        <div id="usd-red"     class="cat-usd">$0</div>
+      </div>
+      <div style="flex:1;border-left:1px solid rgba(0,0,0,0.05);">
+        <div class="cat-title" style="color:#ea580c;">⚡ Yellow (10-50)</div>
+        <div id="count-yellow" class="cat-count">0</div>
+        <div id="btc-yellow"   class="cat-btc">0.00 ₿</div>
+        <div id="usd-yellow"   class="cat-usd">$0</div>
+      </div>
+      <div style="flex:1;border-left:1px solid rgba(0,0,0,0.05);">
+        <div class="cat-title" style="color:#1d4ed8;">💧 Blue (1-10)</div>
+        <div id="count-blue" class="cat-count">0</div>
+        <div id="btc-blue"   class="cat-btc">0.00 ₿</div>
+        <div id="usd-blue"   class="cat-usd">$0</div>
+      </div>
+      <div style="flex:1;border-left:1px solid rgba(0,0,0,0.05);">
+        <div class="cat-title" style="color:#0369a1;">🌊 Water (&lt;1)</div>
+        <div id="count-water" class="cat-count">0</div>
+        <div id="btc-water"   class="cat-btc">0.00 ₿</div>
+        <div id="usd-water"   class="cat-usd">$0</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COPY TOAST -->
+  <div class="copy-toast" id="copy-alert">TXID Copied! 👍</div>
+
+  <script src="assets/js/drop.js"></script>
+</body>
+</html>

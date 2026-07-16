@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestExchange — Wallet Transactions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://ws.blockchain.info">
+  <link rel="preconnect" href="https://stream.binance.com">
+  <link rel="stylesheet" href="assets/css/wallet.css">
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back</a>
+
+  <div class="page-title">
+    <span class="live-dot"></span>
+    Whale Wallets <span id="pageStatus">Connecting...</span>
+  </div>
+
+  <div class="btc-ticker">
+    <span class="btc-ico">₿</span>
+    <span id="btcTickerVal">—</span>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-pill"><div class="lbl">Whale Volume</div><div class="val" id="sTotalVol">0.00 ₿</div></div>
+    <div class="stat-pill"><div class="lbl">Exch. Inflow</div><div class="val red" id="sInflow">$0</div></div>
+    <div class="stat-pill"><div class="lbl">Exch. Outflow</div><div class="val green" id="sOutflow">$0</div></div>
+    <div class="stat-pill"><div class="lbl">Net Flow</div><div class="val gray" id="sNetFlow">—</div></div>
+    <div class="stat-pill"><div class="lbl">Biggest Tx</div><div class="val" id="sBiggest">—</div></div>
+    <div class="stat-pill"><div class="lbl">Whale Txs</div><div class="val" id="sCount">0</div></div>
+  </div>
+
+  <!-- NET FLOW BAR -->
+  <div class="netflow-wrap">
+    <span class="nf-lbl" style="color:#e53935">Inflow</span>
+    <div class="nf-bar"><div class="nf-in" id="nfIn" style="width:50%"></div><div class="nf-out" id="nfOut" style="width:50%"></div></div>
+    <span class="nf-lbl" style="color:#00a846">Outflow</span>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls-row">
+    <div class="ctrl-group">
+      <button class="ctrl-btn filter active" onclick="setFilter('all',this)">All</button>
+      <button class="ctrl-btn filter inflow" onclick="setFilter('inflow',this)">📥 Inflow</button>
+      <button class="ctrl-btn filter outflow" onclick="setFilter('outflow',this)">📤 Outflow</button>
+      <button class="ctrl-btn filter unknown" onclick="setFilter('unknown',this)">❓ Unknown</button>
+    </div>
+    <div class="ctrl-group">
+      <button class="ctrl-btn thresh" onclick="setMinBTC(1,this)">1+ BTC</button>
+      <button class="ctrl-btn thresh active" onclick="setMinBTC(5,this)">5+ BTC</button>
+      <button class="ctrl-btn thresh" onclick="setMinBTC(10,this)">10+ BTC</button>
+      <button class="ctrl-btn thresh" onclick="setMinBTC(50,this)">50+ BTC</button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div class="feed-wrap">
+    <div class="feed-list" id="feedList">
+      <div class="empty-msg" id="emptyMsg">Whale transactions wait ho rahi hain (min 5 BTC)...</div>
+      <div class="exchange-note">
+        Data: Blockchain.info live network feed. Exchange tags sirf publicly-known addresses par based hain — yeh list poori nahi hai
+        (exchanges hazaron wallets rotate karte hain), isliye bahut se real exchange transactions "Unknown Whale Wallet" dikhenge.
+        Kisi bhi row par click karke Blockchain.com par transaction verify kar sakte ho.
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/wallet.js"></script>
+</body>
+</html>

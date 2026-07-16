@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TestExchange — Live Orders Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fstream.binance.com">
+<link rel="preconnect" href="https://stream.bybit.com">
+<link rel="preconnect" href="https://ws.okx.com">
+<link rel="stylesheet" href="assets/css/orders.css">
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <div class="tb-r1">
+    <a href="index.html" class="back-btn">← Back</a>
+    <div class="logo">📊 <span>Order</span>Flow</div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn" onclick="setMarketMode('spot',this)">Spot Orders</button>
+      <button class="mode-btn active" onclick="setMarketMode('futures',this)">Futures Orders</button>
+    </div>
+
+    <div class="ws-badges">
+      <div class="ws-badge"><div class="ws-dot" id="dot-binance"></div>Binance</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-bybit"></div>Bybit</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-okx"></div>OKX</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-bitget"></div>Bitget</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-gate"></div>Gate.io</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-coinbase"></div>Coinbase</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-kraken"></div>Kraken</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-mexc"></div>MEXC</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-kucoin"></div>KuCoin</div>
+      <div class="ws-badge"><div class="ws-dot" id="dot-bitfinex"></div>Bitfinex</div>
+    </div>
+
+    <div class="coin-filters" id="coinFilters">
+      <button class="coin-btn active" onclick="setCoin('ALL',this)">ALL</button>
+      <button class="coin-btn" onclick="setCoin('BTC',this)">BTC</button>
+      <button class="coin-btn" onclick="setCoin('ETH',this)">ETH</button>
+      <button class="coin-btn" onclick="setCoin('SOL',this)">SOL</button>
+      <button class="coin-btn" onclick="setCoin('BNB',this)">BNB</button>
+      <button class="coin-btn" onclick="setCoin('XRP',this)">XRP</button>
+      <button class="coin-btn" onclick="setCoin('DOGE',this)">DOGE</button>
+      <button class="coin-btn" onclick="setCoin('ADA',this)">ADA</button>
+      <button class="coin-btn" onclick="setCoin('LINK',this)">LINK</button>
+      <button class="coin-btn" onclick="setCoin('DOT',this)">DOT</button>
+      <button class="coin-btn" onclick="setCoin('LTC',this)">LTC</button>
+    </div>
+
+    <div class="side-filters">
+      <button class="side-btn active" onclick="setSide('ALL',this)">All Sides</button>
+      <button class="side-btn" onclick="setSide('LONG',this)">▲ Long</button>
+      <button class="side-btn short-opt" onclick="setSide('SHORT',this)">▼ Short</button>
+    </div>
+
+    <div class="exch-filters">
+      <button class="exch-btn active" onclick="setExchange('ALL',this)">All Exch.</button>
+      <button class="exch-btn" onclick="setExchange('Binance',this)">Binance</button>
+      <button class="exch-btn" onclick="setExchange('Bybit',this)">Bybit</button>
+      <button class="exch-btn" onclick="setExchange('OKX',this)">OKX</button>
+      <button class="exch-btn" onclick="setExchange('Bitget',this)">Bitget</button>
+      <button class="exch-btn" onclick="setExchange('Gate',this)">Gate.io</button>
+      <button class="exch-btn" onclick="setExchange('Coinbase',this)">Coinbase</button>
+      <button class="exch-btn" onclick="setExchange('Kraken',this)">Kraken</button>
+      <button class="exch-btn" onclick="setExchange('MEXC',this)">MEXC</button>
+      <button class="exch-btn" onclick="setExchange('KuCoin',this)">KuCoin</button>
+      <button class="exch-btn" onclick="setExchange('Bitfinex',this)">Bitfinex</button>
+    </div>
+
+    <div class="view-filters">
+      <button class="view-btn active" onclick="setView('split',this)">Split View</button>
+      <button class="view-btn" onclick="setView('mix',this)">Mixed</button>
+    </div>
+
+    <div class="tf-filters">
+      <button class="tf-btn active" onclick="setPeriod('session',this)">Session</button>
+      <button class="tf-btn" onclick="setPeriod('5m',this)">5m</button>
+      <button class="tf-btn" onclick="setPeriod('15m',this)">15m</button>
+      <button class="tf-btn" onclick="setPeriod('1h',this)">1h</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="tb-r2">
+    <div class="sbox"><div class="sl">Total Orders</div><div class="sv a" id="sTot">0</div><div class="ss" id="sTotV">$0 vol</div></div>
+    <div class="sbox"><div class="sl" id="lblLongOrders">Long Orders</div><div class="sv l" id="sLong">0</div><div class="ss" id="sLongV">$0</div></div>
+    <div class="sbox"><div class="sl" id="lblShortOrders">Short Orders</div><div class="sv s" id="sShort">0</div><div class="ss" id="sShortV">$0</div></div>
+    <div class="sbox"><div class="sl" id="lblLongVol">Long Volume</div><div class="sv l" id="sLongVol">$0</div><div class="ss" id="sLongVolB">0₿</div></div>
+    <div class="sbox"><div class="sl" id="lblShortVol">Short Volume</div><div class="sv s" id="sShortVol">$0</div><div class="ss" id="sShortVolB">0₿</div></div>
+    <div class="sbox"><div class="sl">Biggest Order</div><div class="sv" id="sBig">$0</div><div class="ss" id="sBigInfo">—</div></div>
+    <div class="sbox"><div class="sl">Orders/Min</div><div class="sv" id="sRate">0</div><div class="ss">live rate</div></div>
+    <div class="sbox"><div class="sl">BTC Price</div><div class="sv a" id="sBTC">—</div><div class="ss">Live</div></div>
+  </div>
+
+  <!-- RATIO -->
+  <div class="tb-r3">
+    <span class="rpct" style="color:var(--long)" id="lpct">50%</span>
+    <span style="font-size:9px;color:#bbb" id="lblRatioLong">Long Orders</span>
+    <div class="ratio-bar"><div class="rl" id="rl" style="width:50%"></div><div class="rs" id="rs" style="width:50%"></div></div>
+    <span style="font-size:9px;color:#bbb" id="lblRatioShort">Short Orders</span>
+    <span class="rpct" style="color:var(--short)" id="spct">50%</span>
+  </div>
+
+  <!-- MIN SIZE -->
+  <div class="tb-r4">
+    <span style="font-size:10px;color:#aaa;font-weight:600">Min Size:</span>
+    <button class="min-btn active" onclick="setMin(0,this)">All</button>
+    <button class="min-btn" onclick="setMin(1000,this)">$1K+</button>
+    <button class="min-btn" onclick="setMin(10000,this)">$10K+</button>
+    <button class="min-btn" onclick="setMin(50000,this)">$50K+</button>
+    <button class="min-btn" onclick="setMin(100000,this)">$100K+</button>
+    <button class="min-btn" onclick="setMin(500000,this)">🐳 $500K+</button>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔕 Sound</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-wrap" id="mainWrap">
+  <div class="canvas-wrap">
+    <canvas id="ordCanvas"></canvas>
+    <div class="divider-lbl" id="divLbl" style="display:none">← LONG &nbsp;|&nbsp; SHORT →</div>
+  </div>
+  <div class="side-panel">
+    <div class="side-hdr">
+      Live Orders
+      <span id="feedCnt" style="color:var(--long);text-transform:none;letter-spacing:0;font-size:11px">0</span>
+    </div>
+    <div class="side-tabs">
+      <button class="stab active" onclick="showTab('all',this)">All</button>
+      <button class="stab" onclick="showTab('long',this)" style="color:var(--long)">Longs</button>
+      <button class="stab" onclick="showTab('short',this)" style="color:var(--short)">Shorts</button>
+    </div>
+    <div class="feed-list" id="feedList"></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-title" id="ttTitle">—</div>
+  <div class="tt-row"><span class="tt-lbl">Coin</span><span class="tt-val" id="ttSym">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Amount</span><span class="tt-val" id="ttAmt">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Value</span><span class="tt-val" id="ttUSD">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Price</span><span class="tt-val" id="ttPrice">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Exchange</span><span class="tt-val" id="ttExch">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Type</span><span class="tt-val" id="ttType">—</span></div>
+</div>
+
+<script src="assets/js/orders.js"></script>
+</body>
+</html>

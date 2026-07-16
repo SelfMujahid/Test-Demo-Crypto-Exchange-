@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestExchange — Bot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://stream.binance.com">
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/bot.css">
+</head>
+<body>
+
+<header>
+  <div class="top-bar">
+    <a href="index.html" class="logo">
+      <img src="assets/images/logo.webp" alt="TestTrade Logo" class="logo-img">
+      TEST<span>Exchange</span>
+    </a>
+    <div class="testing-tag">⚡ Testing</div>
+  </div>
+  <div class="menu-bar">
+    <a href="index.html" class="menu-btn">Home</a>
+    <a href="spot.html" class="menu-btn">Spot</a>
+    <a href="futures.html" class="menu-btn">Futures</a>
+    <a href="bot.html" class="menu-btn active">Bot</a>
+    <a href="#" class="menu-btn" onclick="toggleVisualMenu(event)">Visual ▾</a>
+    <div id="visualMenu" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 166px rgba(0,0,0,0.1);z-index:999;">
+      <a href="liquidations.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Liquidations</a>
+      <a href="orders.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Order Flow</a>
+      <a href="drop.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Drops</a>
+      <a href="wallet.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Wallet Transactions</a>
+      <a href="bubbles.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;">Bubbles</a>
+    </div>
+  </div>
+</header>
+
+<!-- TICKER STRIP -->
+<div class="ticker-strip">
+  <div class="tick-item"><span class="tick-sym">BTC</span><span class="tick-price up" id="tp-BTC">—</span></div>
+  <div class="tick-item"><span class="tick-sym">ETH</span><span class="tick-price up" id="tp-ETH">—</span></div>
+  <div class="tick-item"><span class="tick-sym">SOL</span><span class="tick-price up" id="tp-SOL">—</span></div>
+  <div class="tick-item"><span class="tick-sym">BNB</span><span class="tick-price up" id="tp-BNB">—</span></div>
+  <div class="tick-item"><span class="tick-sym">XRP</span><span class="tick-price up" id="tp-XRP">—</span></div>
+  <div class="tick-item"><span class="tick-sym">DOGE</span><span class="tick-price up" id="tp-DOGE">—</span></div>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-hdr">
+  <div class="page-title-wrap">
+    <!-- Candle icon — same as Futures page -->
+    <div class="candle-icon">
+      <div class="candle">
+        <div class="candle-wick" style="height:4px"></div>
+        <div class="candle-body" style="height:10px;background:#00c853"></div>
+        <div class="candle-wick" style="height:3px"></div>
+      </div>
+      <div class="candle">
+        <div class="candle-wick" style="height:3px"></div>
+        <div class="candle-body" style="height:7px;background:#f6465d"></div>
+        <div class="candle-wick" style="height:4px"></div>
+      </div>
+      <div class="candle">
+        <div class="candle-wick" style="height:2px"></div>
+        <div class="candle-body" style="height:12px;background:#00c853"></div>
+        <div class="candle-wick" style="height:3px"></div>
+      </div>
+    </div>
+    <div class="page-title">Bot <span>Trading</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <button class="reset-btn" id="resetBalBtn">Reset Balance</button>
+    <div class="status-pill" id="statusPill">
+      <div class="sdot" id="sdot"></div>
+      <span id="stext">Bot Stopped</span>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-wrap">
+  <div class="stat-card">
+    <div class="stat-lbl">Total Trades</div>
+    <div class="stat-val" id="sTot">0</div>
+    <div class="stat-sub">Since start</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">Win Rate</div>
+    <div class="stat-val" id="sWin" style="color:var(--green)">0%</div>
+    <div class="stat-sub" id="sWinSub">0W / 0L</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">Demo Balance</div>
+    <div class="stat-val" id="sBalance" style="color:var(--accent)">$10,000</div>
+    <div class="stat-sub">Available USDT</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">Total P&L</div>
+    <div class="stat-val" id="sPnl">$0.00</div>
+    <div class="stat-sub">Demo account</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">Active Trades</div>
+    <div class="stat-val" id="sActive">0</div>
+    <div class="stat-sub">Open now</div>
+  </div>
+</div>
+
+<!-- MAIN: Settings + Right Column -->
+<div class="main-wrap">
+
+  <!-- LEFT: SETTINGS -->
+  <div class="s-card">
+    <div class="s-hdr">
+      Bot Settings
+      <span class="s-hdr-right" id="pairTag">BTC/USDT</span>
+    </div>
+    <div class="s-body">
+
+      <div class="f-row">
+        <div class="f-lbl">Trading Pair</div>
+        <select class="f-select" id="botPair">
+          <option>BTC/USDT</option><option>ETH/USDT</option>
+          <option>SOL/USDT</option><option>BNB/USDT</option>
+          <option>XRP/USDT</option><option>DOGE/USDT</option>
+        </select>
+      </div>
+
+      <hr class="s-sep">
+
+      <div class="f-row">
+        <div class="f-lbl">Indicator Strategy</div>
+        <select class="f-select" id="botInd">
+          <option value="rsi">RSI — Relative Strength Index</option>
+          <option value="macd">MACD — Moving Avg Convergence</option>
+          <option value="ema">EMA Cross — 9/21</option>
+          <option value="bb">Bollinger Bands</option>
+          <option value="stoch">Stochastic RSI</option>
+          <option value="cci">CCI — Commodity Channel</option>
+          <option value="multi">Multi-Signal (RSI + MACD)</option>
+        </select>
+      </div>
+      <div class="ind-info" id="indInfo">RSI 30 se neeche = Oversold → Long. RSI 70 se upar = Overbought → Short.</div>
+
+      <div class="f-row">
+        <div class="f-lbl">Timeframe</div>
+        <div class="tf-row">
+          <button class="tf-btn" onclick="setTF(this)">1m</button>
+          <button class="tf-btn" onclick="setTF(this)">5m</button>
+          <button class="tf-btn active" onclick="setTF(this)">15m</button>
+          <button class="tf-btn" onclick="setTF(this)">1h</button>
+          <button class="tf-btn" onclick="setTF(this)">4h</button>
+          <button class="tf-btn" onclick="setTF(this)">1d</button>
+        </div>
+      </div>
+
+      <hr class="s-sep">
+
+      <div class="f-row">
+        <div class="f-lbl">Trade Direction</div>
+        <div class="dir-row">
+          <button class="dir-btn long-active" id="dirLong"  onclick="setDir('long')">▲ Long</button>
+          <button class="dir-btn"             id="dirShort" onclick="setDir('short')">▼ Short</button>
+          <button class="dir-btn"             id="dirBoth"  onclick="setDir('both')">↕ Both</button>
+        </div>
+      </div>
+
+      <div class="lev-box">
+        <div class="lev-top">
+          <span class="lev-lbl">Leverage</span>
+          <span class="lev-val" id="levVal">5x</span>
+        </div>
+        <input type="range" id="levR" min="1" max="50" value="5">
+        <div class="lev-ticks"><span>1x</span><span>10x</span><span>20x</span><span>35x</span><span>50x</span></div>
+      </div>
+
+      <hr class="s-sep">
+
+      <div class="f-row">
+        <div class="f-lbl">Amount per Trade</div>
+        <div class="inp-wrap">
+          <input type="number" class="f-input" id="botAmt" value="100" min="10">
+          <span class="inp-sfx">USDT</span>
+        </div>
+      </div>
+
+      <div class="f-row">
+        <div class="f-lbl">Max Open Trades</div>
+        <select class="f-select" id="botMax">
+          <option value="1">1 at a time</option>
+          <option value="2">2 at a time</option>
+          <option value="3" selected>3 at a time</option>
+          <option value="5">5 at a time</option>
+        </select>
+      </div>
+
+      <div class="tpsl-grid">
+        <div class="f-row">
+          <div class="f-lbl" style="color:var(--green)">Take Profit %</div>
+          <div class="inp-wrap">
+            <input type="number" class="f-input" id="botTP" value="2" min="0.1" step="0.1">
+            <span class="inp-sfx">%</span>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-lbl" style="color:var(--red)">Stop Loss %</div>
+          <div class="inp-wrap">
+            <input type="number" class="f-input" id="botSL" value="1" min="0.1" step="0.1">
+            <span class="inp-sfx">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="f-row">
+        <div class="f-lbl">
+          Trailing Stop %
+          <span class="f-lbl-note">0 = off</span>
+        </div>
+        <div class="inp-wrap">
+          <input type="number" class="f-input" id="botTrail" value="0" min="0" step="0.1">
+          <span class="inp-sfx">%</span>
+        </div>
+      </div>
+
+      <hr class="s-sep">
+
+      <div class="bot-btns">
+        <button class="btn-start" id="btnStart">▶ Start Bot</button>
+        <button class="btn-stop"  id="btnStop" disabled>■ Stop Bot</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-col">
+
+    <!-- ACTIVE POSITIONS -->
+    <div class="s-card">
+      <div class="s-hdr">
+        Active Positions
+        <span class="s-hdr-right" id="actCount">(0)</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>Pair</th><th>Side</th><th>Entry</th><th>Current</th>
+            <th>Qty</th><th>Lev</th><th>Take Profit</th><th>Stop Loss</th>
+            <th>PnL</th><th>Close</th>
+          </tr></thead>
+          <tbody id="actBody">
+            <tr><td colspan="10" class="no-data">Bot start karein to positions yahan dikhenge</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LOG + ORDER FLOW side by side -->
+    <div style="display:grid;grid-template-columns:1fr 220px;gap:10px;">
+
+      <!-- ACTIVITY LOG -->
+      <div class="s-card">
+        <div class="s-hdr">
+          Activity Log
+          <button class="clear-btn" onclick="clearLog()">Clear</button>
+        </div>
+        <div class="log-box" id="logBox">
+          <div class="log-line ll-info">Bot ready — settings configure karein aur Start dabayein.</div>
+        </div>
+      </div>
+
+      <!-- LIVE ORDER FLOW -->
+      <div class="s-card">
+        <div class="s-hdr">
+          <span><span class="sdot on" style="margin-right:5px;display:inline-block"></span>Order Flow</span>
+        </div>
+        <div class="of-hdr">
+          <span>Pair / Side</span>
+          <span>Price × Qty</span>
+          <span>Total</span>
+        </div>
+        <div class="of-feed" id="ofFeed"></div>
+      </div>
+
+    </div>
+
+    <!-- TRADE HISTORY -->
+    <div class="s-card">
+      <div class="s-hdr">
+        Trade History
+        <button class="clear-btn" onclick="clearHistory()">Clear</button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>Time</th><th>Pair</th><th>Side</th><th>Entry</th>
+            <th>Exit</th><th>Qty</th><th>P&L</th><th>Result</th>
+          </tr></thead>
+          <tbody id="histBody">
+            <tr><td colspan="8" class="no-data">Koi completed trade nahi</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/bot.js"></script>
+</body>
+</html>

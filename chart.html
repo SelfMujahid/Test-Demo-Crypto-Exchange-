@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Crypto Dashboard</title>
+    <!-- Tailwind CSS for UI -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- TradingView Lightweight Charts Library -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body id="body" class="bg-gray-900 text-white min-h-screen transition-colors duration-300">
+
+    <div class="container mx-auto p-4 lg:p-6">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md" id="headerCard">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl font-black bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">CRYPTOFLOW</span>
+                <span id="livePrice" class="text-xl font-mono text-green-400 animate-pulse">Loading...</span>
+            </div>
+            
+            <!-- Quick Settings Bar -->
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Pair Selector -->
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Select Pair</label>
+                    <select id="pairSelect" class="bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm font-semibold outline-none cursor-pointer focus:border-amber-500">
+                        <option value="btcusdt">BTC / USDT</option>
+                        <option value="ethusdt">ETH / USDT</option>
+                        <option value="solusdt">SOL / USDT</option>
+                        <option value="bnbusdt">BNB / USDT</option>
+                    </select>
+                </div>
+
+                <!-- Theme Toggle -->
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Theme</label>
+                    <button id="themeBtn" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-3 py-1.5 text-sm font-semibold cursor-pointer">
+                        ☀️ Light Mode
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Customization Sidebar -->
+            <aside class="bg-gray-800 border border-gray-700 p-5 rounded-xl shadow-md flex flex-col gap-5" id="sidebarCard">
+                <h3 class="font-bold text-lg border-b border-gray-700 pb-2 text-amber-400">Chart Customizer</h3>
+                
+                <!-- Chart Styles -->
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Chart Style</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="btnCandle" class="bg-amber-500 text-gray-900 font-bold py-1.5 px-2 text-xs rounded text-center cursor-pointer">Candles</button>
+                        <button id="btnLine" class="bg-gray-700 hover:bg-gray-600 py-1.5 px-2 text-xs rounded text-center cursor-pointer">Line</button>
+                        <button id="btnArea" class="bg-gray-700 hover:bg-gray-600 py-1.5 px-2 text-xs rounded text-center cursor-pointer">Area</button>
+                    </div>
+                </div>
+
+                <!-- Color Pickers -->
+                <div id="candleColorSettings" class="flex flex-col gap-3">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Candle Custom Colors</h4>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Bullish (Up):</span>
+                        <input type="color" id="upColor" value="#26a69a" class="w-8 h-8 rounded border-none cursor-pointer bg-transparent">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Bearish (Down):</span>
+                        <input type="color" id="downColor" value="#ef5350" class="w-8 h-8 rounded border-none cursor-pointer bg-transparent">
+                    </div>
+                </div>
+
+                <!-- Grid Options -->
+                <div>
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Grid Visibility</h4>
+                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                        <input type="checkbox" id="toggleGrid" checked class="accent-amber-500"> Show Grid Lines
+                    </label>
+                </div>
+            </aside>
+
+            <!-- Chart Display -->
+            <main class="lg:col-span-3 bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md relative min-h-[450px]" id="chartCard">
+                <!-- Main Chart Root Div -->
+                <div id="chartContainer" class="w-full h-[450px]"></div>
+            </main>
+
+        </div>
+    </div>
+
+    <!-- Core Script Logic -->
+    <script>
+        // DOM Elements
+        const body = document.getElementById('body');
+        const headerCard = document.getElementById('headerCard');
+        const sidebarCard = document.getElementById('sidebarCard');
+        const chartCard = document.getElementById('chartCard');
+        const pairSelect = document.getElementById('pairSelect');
+        const livePrice = document.getElementById('livePrice');
+        const themeBtn = document.getElementById('themeBtn');
+        const btnCandle = document.getElementById('btnCandle');
+        const btnLine = document.getElementById('btnLine');
+        const btnArea = document.getElementById('btnArea');
+        const upColorInput = document.getElementById('upColor');
+        const downColorInput = document.getElementById('downColor');
+        const toggleGrid = document.getElementById('toggleGrid');
+        const candleColorSettings = document.getElementById('candleColorSettings');
+
+        // State Variables
+        let currentPair = 'btcusdt';
+        let currentChartType = 'candle'; // candle, line, area
+        let isDarkMode = true;
+        let socket;
+        let chart;
+        let currentSeries;
+
+        // Default Theme Configuration Objects
+        const themes = {
+            dark: {
+                bg: '#111827', cardBg: '#1f2937', text: '#ffffff', grid: '#374151', border: '#4b5563'
+            },
+            light: {
+                bg: '#f3f4f6', cardBg: '#ffffff', text: '#1f2937', grid: '#e5e7eb', border: '#d1d5db'
+            }
+        };
+
+        // --- 1. Chart Initialization ---
+        const container = document.getElementById('chartContainer');
+        
+        function initChart() {
+            if (chart) {
+                container.innerHTML = '';
+            }
+
+            const currentThemeConf = isDarkMode ? themes.dark : themes.light;
+
+            chart = LightweightCharts.createChart(container, {
+                width: container.clientWidth,
+                height: 450,
+                layout: {
+                    background: { type: 'solid', color: currentThemeConf.cardBg },
+                    textColor: currentThemeConf.text,
+                },
+                grid: {
+                    vertLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
+                    horzLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
+                },
+                timeScale: { borderColor: currentThemeConf.border, timeVisible: true },
+                rightPriceScale: { borderColor: currentThemeConf.border }
+            });
+
+            createSeries();
+        }
+
+        // --- 2. Create Specific Chart Style Series ---
+        function createSeries() {
+            const upC = upColorInput.value;
+            const downC = downColorInput.value;
+
+            if (currentChartType === 'candle') {
+                candleColorSettings.style.opacity = '1';
+                currentSeries = chart.addCandlestickSeries({
+                    upColor: upC, downColor: downC,
+                    borderUpColor: upC, borderDownColor: downC,
+                    wickUpColor: upC, wickDownColor: downC,
+                });
+            } else if (currentChartType === 'line') {
+                candleColorSettings.style.opacity = '0.4';
+                currentSeries = chart.addLineSeries({ color: upC, lineWidth: 2 });
+            } else if (currentChartType === 'area') {
+                candleColorSettings.style.opacity = '0.4';
+                currentSeries = chart.addAreaSeries({
+                    topColor: `${upC}80`, bottomColor: `${upC}05`, lineColor: upC, lineWidth: 2
+                });
+            }
+        }
+
+        // --- 3. Binance WebSocket Stream Connection ---
+        function connectWebSocket() {
+            if (socket) {
+                socket.close();
+            }
+
+            livePrice.innerText = "Connecting...";
+            // Historical Data pull karne ke bajaye real-time data standard format par initialize hoga
+            let isFirstTick = true;
+
+            socket = new WebSocket(`wss://stream.binance.com:9443/ws/${currentPair}@kline_1m`);
+
+            socket.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                const kline = msg.k;
+
+                const price = parseFloat(kline.c).toFixed(2);
+                livePrice.innerText = `${currentPair.toUpperCase().replace('USDT','/USDT')}: $${price}`;
+                
+                // Color formatting based on pump/dump
+                if(parseFloat(kline.c) >= parseFloat(kline.o)) {
+                    livePrice.style.color = upColorInput.value;
+                } else {
+                    livePrice.style.color = downColorInput.value;
+                }
+
+                // Data object structured dynamically based on active chart style
+                let dataPoint;
+                if (currentChartType === 'candle') {
+                    dataPoint = {
+                        time: kline.t / 1000,
+                        open: parseFloat(kline.o),
+                        high: parseFloat(kline.h),
+                        low: parseFloat(kline.l),
+                        close: parseFloat(kline.c)
+                    };
+                } else {
+                    dataPoint = {
+                        time: kline.t / 1000,
+                        value: parseFloat(kline.c)
+                    };
+                }
+
+                currentSeries.update(dataPoint);
+            };
+        }
+
+        // --- 4. Event Handlers & Dynamic Controls ---
+
+        // Change Crypto Pair
+        pairSelect.addEventListener('change', (e) => {
+            currentPair = e.target.value;
+            initChart();
+            connectWebSocket();
+        });
+
+        // Toggle Grid Visibility
+        toggleGrid.addEventListener('change', () => {
+            const currentThemeConf = isDarkMode ? themes.dark : themes.light;
+            chart.applyOptions({
+                grid: {
+                    vertLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
+                    horzLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
+                }
+            });
+        });
+
+        // Real-time Color Customization Update
+        const updateColors = () => {
+            const upC = upColorInput.value;
+            const downC = downColorInput.value;
+            
+            if (currentChartType === 'candle') {
+                currentSeries.applyOptions({
+                    upColor: upC, downColor: downC,
+                    borderUpColor: upC, borderDownColor: downC,
+                    wickUpColor: upC, wickDownColor: downC
+                });
+            } else if (currentChartType === 'line') {
+                currentSeries.applyOptions({ color: upC });
+            } else if (currentChartType === 'area') {
+                currentSeries.applyOptions({ topColor: `${upC}80`, lineColor: upC });
+            }
+        };
+
+        upColorInput.addEventListener('input', updateColors);
+        downColorInput.addEventListener('input', updateColors);
+
+        // Chart Style Type Toggles
+        const setStyleButtonActive = (activeBtn) => {
+            [btnCandle, btnLine, btnArea].forEach(btn => {
+                btn.className = "bg-gray-700 hover:bg-gray-600 py-1.5 px-2 text-xs rounded text-center cursor-pointer";
+            });
+            activeBtn.className = "bg-amber-500 text-gray-900 font-bold py-1.5 px-2 text-xs rounded text-center cursor-pointer";
+        };
+
+        btnCandle.addEventListener('click', () => { currentChartType = 'candle'; setStyleButtonActive(btnCandle); initChart(); connectWebSocket(); });
+        btnLine.addEventListener('click', () => { currentChartType = 'line'; setStyleButtonActive(btnLine); initChart(); connectWebSocket(); });
+        btnArea.addEventListener('click', () => { currentChartType = 'area'; setStyleButtonActive(btnArea); initChart(); connectWebSocket(); });
+
+        // Dark / Light Theme Customizer Switch
+        themeBtn.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                themeBtn.innerText = "☀️ Light Mode";
+                body.className = "bg-gray-900 text-white min-h-screen transition-colors duration-300";
+                headerCard.className = "flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md";
+                sidebarCard.className = "bg-gray-800 border border-gray-700 p-5 rounded-xl shadow-md flex flex-col gap-5";
+                chartCard.className = "lg:col-span-3 bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md relative min-h-[450px]";
+            } else {
+                themeBtn.innerText = "🌙 Dark Mode";
+                body.className = "bg-gray-100 text-gray-900 min-h-screen transition-colors duration-300";
+                headerCard.className = "flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-md";
+                sidebarCard.className = "bg-white border border-gray-200 p-5 rounded-xl shadow-md flex flex-col gap-5";
+                chartCard.className = "lg:col-span-3 bg-white border border-gray-200 p-4 rounded-xl shadow-md relative min-h-[450px]";
+            }
+            initChart();
+            connectWebSocket();
+        });
+
+        // Window Resize Handling
+        window.addEventListener('resize', () => {
+            if(chart && container) {
+                chart.resize(container.clientWidth, 450);
+            }
+        });
+
+        // Runtime Start
+        initChart();
+        connectWebSocket();
+    </script>
+</body>
+</html>

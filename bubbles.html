@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestExchange — Crypto Bubbles</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/bubbles.css">
+</head>
+<body>
+
+<div class="load-screen" id="loadScreen">
+  <div class="spinner"></div>
+  <div class="load-text" id="loadText">Crypto data load ho rahi hai...</div>
+</div>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="index.html" class="back-btn">← Back</a>
+    <div class="logo">TEST<span>Exchange</span> Bubbles</div>
+  </div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('c1m',this)">1M</button>
+    <button class="tf-btn" onclick="setTF('c1h',this)">1H</button>
+    <button class="tf-btn active" onclick="setTF('c24h',this)">24H</button>
+    <button class="tf-btn" onclick="setTF('c7d',this)">7D</button>
+  </div>
+  <div class="filter-group">
+    <button class="filter-btn active" onclick="setFilter('all',this)">Top 100</button>
+    <button class="filter-btn" onclick="setFilter('top50',this)">Top 50</button>
+    <button class="filter-btn" onclick="setFilter('gainers',this)">🚀 Gainers</button>
+    <button class="filter-btn" onclick="setFilter('losers',this)">📉 Losers</button>
+  </div>
+  <div class="stats-row">
+    <span>BTC: <b id="sBTC">—</b></span>
+    <span class="up">▲ <b id="sGain">—</b></span>
+    <span class="dn">▼ <b id="sLoss">—</b></span>
+  </div>
+</div>
+
+<canvas id="bubbleCanvas"></canvas>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-sym"   id="ttSym"></div>
+  <div class="tt-name"  id="ttName"></div>
+  <div class="tt-price" id="ttPrice"></div>
+  <div class="tt-row"><span class="tt-lbl">1H</span><span  class="tt-val" id="tt1h"></span></div>
+  <div class="tt-row"><span class="tt-lbl">24H</span><span class="tt-val" id="tt24h"></span></div>
+  <div class="tt-row"><span class="tt-lbl">7D</span><span  class="tt-val" id="tt7d"></span></div>
+  <div class="tt-row"><span class="tt-lbl">Vol</span><span class="tt-val" id="ttVol"></span></div>
+</div>
+
+<script src="assets/js/bubbles.js"></script>
+</body>
+</html>

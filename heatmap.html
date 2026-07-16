@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TestTrade — Liquidation Heatmap</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f0f2f5;--card:#fff;--border:#e0e0e0;--green:#00c853;--red:#f44336;--accent:#f7931a;--text:#111;--muted:#777;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow:hidden;height:100vh;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,200,83,0.4)}50%{box-shadow:0 0 0 4px rgba(0,200,83,0)}}
+
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:200;background:#fff;border-bottom:1px solid var(--border);}
+  .tb-r1{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;}
+  .logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#111;text-decoration:none;}
+  .logo span{color:var(--accent);}
+  .back-btn{padding:4px 9px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;color:#555;font-size:11px;text-decoration:none;}
+  .ws-pill{display:flex;align-items:center;gap:5px;background:#f8f8f8;border:1px solid #eee;border-radius:20px;padding:3px 9px;font-size:10px;color:#888;}
+  .ws-dot{width:6px;height:6px;border-radius:50%;background:#ccc;}
+  .ws-dot.on{background:var(--green);animation:pulse 1.5s infinite;}
+
+  .pair-btns{display:flex;gap:4px;flex-wrap:wrap;}
+  .pair-btn{padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #e0e0e0;color:#777;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+  .pair-btn.active{background:rgba(247,147,26,0.12);border-color:var(--accent);color:var(--accent);}
+
+  .tf-btns{display:flex;gap:3px;margin-left:auto;}
+  .tf-btn{padding:4px 9px;border-radius:6px;background:#f5f5f5;border:1px solid #e0e0e0;color:#777;font-size:10px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+  .tf-btn.active{background:rgba(247,147,26,0.12);border-color:var(--accent);color:var(--accent);}
+
+  .tb-r2{display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid #f0f0f0;}
+  .tb-r2::-webkit-scrollbar{display:none;}
+  .sbox{flex:0 0 auto;padding:7px 16px;border-right:1px solid #f0f0f0;display:flex;flex-direction:column;gap:1px;min-width:110px;}
+  .sbox:last-child{border-right:none;}
+  .sl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#aaa;}
+  .sv{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#111;}
+  .sv.g{color:var(--green);} .sv.r{color:var(--red);} .sv.a{color:var(--accent);}
+  .ss{font-size:9px;color:#bbb;}
+
+  #hmCanvas{position:fixed;left:0;right:0;bottom:0;width:100%;display:block;background:#fff;}
+
+  /* LEGEND */
+  .legend{position:fixed;right:16px;bottom:20px;z-index:100;background:rgba(255,255,255,0.95);border:1px solid #e0e0e0;border-radius:10px;padding:10px 14px;font-size:10px;}
+  .leg-title{font-weight:700;color:#555;margin-bottom:6px;}
+  .leg-bar{width:120px;height:8px;border-radius:4px;margin:4px 0;background:linear-gradient(to right,rgba(0,200,83,0.1),rgba(0,200,83,1));}
+  .leg-bar.red{background:linear-gradient(to right,rgba(244,67,54,0.1),rgba(244,67,54,1));}
+  .leg-row{display:flex;justify-content:space-between;font-size:9px;color:#aaa;}
+
+  /* TOOLTIP */
+  .tooltip{position:fixed;z-index:400;pointer-events:none;display:none;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:10px 14px;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+  .tt-price{font-size:14px;font-weight:800;margin-bottom:4px;}
+  .tt-row{display:flex;justify-content:space-between;gap:12px;font-size:10px;margin-top:2px;}
+  .tt-lbl{color:#888;} .tt-val{font-weight:600;}
+
+  /* PRICE LINE LABEL */
+  .price-label{position:fixed;right:270px;z-index:150;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;pointer-events:none;transition:top 0.1s;}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <div class="tb-r1">
+    <a href="index.html" class="back-btn">← Back</a>
+    <div class="logo">🔥 Liq <span>Heatmap</span></div>
+    <div class="ws-pill"><div class="ws-dot" id="wsDot"></div><span id="wsLabel">Connecting...</span></div>
+
+    <div class="pair-btns" id="pairBtns">
+      <button class="pair-btn active" onclick="setPairBtn('BTCUSDT',this)">BTC</button>
+      <button class="pair-btn" onclick="setPairBtn('ETHUSDT',this)">ETH</button>
+      <button class="pair-btn" onclick="setPairBtn('SOLUSDT',this)">SOL</button>
+      <button class="pair-btn" onclick="setPairBtn('BNBUSDT',this)">BNB</button>
+      <button class="pair-btn" onclick="setPairBtn('XRPUSDT',this)">XRP</button>
+      <button class="pair-btn" onclick="setPairBtn('DOGEUSDT',this)">DOGE</button>
+      <button class="pair-btn" onclick="setPairBtn('ADAUSDT',this)">ADA</button>
+      <button class="pair-btn" onclick="setPairBtn('AVAXUSDT',this)">AVAX</button>
+      <button class="pair-btn" onclick="setPairBtn('LINKUSDT',this)">LINK</button>
+      <button class="pair-btn" onclick="setPairBtn('DOTUSDT',this)">DOT</button>
+      <button class="pair-btn" onclick="setPairBtn('LTCUSDT',this)">LTC</button>
+      <button class="pair-btn" onclick="setPairBtn('NEARUSDT',this)">NEAR</button>
+      <button class="pair-btn" onclick="setPairBtn('INJUSDT',this)">INJ</button>
+      <button class="pair-btn" onclick="setPairBtn('ARBUSDT',this)">ARB</button>
+      <button class="pair-btn" onclick="setPairBtn('OPUSDT',this)">OP</button>
+      <button class="pair-btn" onclick="setPairBtn('SUIUSDT',this)">SUI</button>
+      <button class="pair-btn" onclick="setPairBtn('APTUSDT',this)">APT</button>
+      <button class="pair-btn" onclick="setPairBtn('MATICUSDT',this)">MATIC</button>
+    </div>
+    <select id="allPairsSel" style="padding:4px 8px;border-radius:6px;border:1px solid #e0e0e0;font-size:11px;font-family:Inter,sans-serif;color:#555;background:#f5f5f5;" onchange="setPairFromSel(this)">
+      <option value="">More pairs...</option>
+    </select>
+
+    <div class="tf-btns">
+      <button class="tf-btn active" onclick="setTF(0.02,this)">±2%</button>
+      <button class="tf-btn" onclick="setTF(0.05,this)">±5%</button>
+      <button class="tf-btn" onclick="setTF(0.10,this)">±10%</button>
+      <button class="tf-btn" onclick="setTF(0.20,this)">±20%</button>
+    </div>
+  </div>
+
+  <div class="tb-r2">
+    <div class="sbox"><div class="sl">Current Price</div><div class="sv a" id="sPrice">—</div><div class="ss" id="sChange">—</div></div>
+    <div class="sbox"><div class="sl">Long Liq Zone</div><div class="sv r" id="sLongZone">—</div><div class="ss">Below price</div></div>
+    <div class="sbox"><div class="sl">Short Liq Zone</div><div class="sv g" id="sShortZone">—</div><div class="ss">Above price</div></div>
+    <div class="sbox"><div class="sl">Biggest Long Liq</div><div class="sv r" id="sBigLong">—</div><div class="ss" id="sBigLongP">at —</div></div>
+    <div class="sbox"><div class="sl">Biggest Short Liq</div><div class="sv g" id="sBigShort">—</div><div class="ss" id="sBigShortP">at —</div></div>
+    <div class="sbox"><div class="sl">Leverage Est.</div><div class="sv" id="sLev">1-125x</div><div class="ss">Multi exchange</div></div>
+  </div>
+</div>
+
+<canvas id="hmCanvas"></canvas>
+
+<div class="legend">
+  <div class="leg-title">🔴 Long Liquidations</div>
+  <div class="leg-bar red"></div>
+  <div class="leg-row"><span>Low</span><span>High</span></div>
+  <div class="leg-title" style="margin-top:8px">🟢 Short Liquidations</div>
+  <div class="leg-bar"></div>
+  <div class="leg-row"><span>Low</span><span>High</span></div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-price" id="ttPrice">—</div>
+  <div class="tt-row"><span class="tt-lbl">Long Liqs</span><span class="tt-val r" id="ttLong">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Short Liqs</span><span class="tt-val g" id="ttShort">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Total Vol</span><span class="tt-val" id="ttVol">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Leverage</span><span class="tt-val" id="ttLev">—</span></div>
+</div>
+
+<div class="price-label" id="priceLabel" style="display:none">—</div>
+
+<script>
+const canvas=document.getElementById('hmCanvas');
+const ctx=canvas.getContext('2d');
+const dpr=Math.min(window.devicePixelRatio||1,2);
+
+let currentPrice=0, currentPair='BTCUSDT', priceRange=0.02;
+let ws, wsPrice;
+let heatData={}; // price_level -> {long, short}
+let mouseY=-1;
+
+// ===== RESIZE =====
+function resize(){
+  const topH=document.getElementById('topbar').offsetHeight||90;
+  const W=window.innerWidth, H=window.innerHeight-topH;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  canvas.style.top=topH+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  canvas._W=W; canvas._H=H; canvas._topH=topH;
+}
+window.addEventListener('resize',()=>{resize();draw();});
+
+// ===== GENERATE HEAT DATA =====
+// Build liquidation heatmap from price levels
+// Based on: at each price level, longs get liquidated when price falls there
+// shorts get liquidated when price rises there
+// We simulate realistic distribution based on leverage
+
+function buildHeatData(){
+  if(!currentPrice) return;
+  heatData={};
+  const range=priceRange;
+  const steps=200; // price levels
+  const low=currentPrice*(1-range);
+  const high=currentPrice*(1+range);
+  const step=(high-low)/steps;
+
+  for(let i=0;i<=steps;i++){
+    const p=low+i*step;
+    const distFromPrice=Math.abs(p-currentPrice)/currentPrice;
+    const pKey=p.toFixed(2);
+
+    // Long liquidations happen below current price
+    // More concentrated near price (high leverage), less far away
+    if(p<currentPrice){
+      const dist=(currentPrice-p)/currentPrice;
+      // Higher concentration near current price (10-25x leverage)
+      // Lower concentration far from price (2-5x leverage)
+      const base=Math.exp(-dist*8)*0.8 + Math.exp(-dist*30)*0.5;
+      const longLiq=base*(0.8+Math.random()*0.4)*currentPrice*0.001;
+      heatData[pKey]={long:longLiq, short:0, price:p};
+    }
+
+    // Short liquidations happen above current price
+    if(p>currentPrice){
+      const dist=(p-currentPrice)/currentPrice;
+      const base=Math.exp(-dist*8)*0.7 + Math.exp(-dist*25)*0.4;
+      const shortLiq=base*(0.8+Math.random()*0.4)*currentPrice*0.001;
+      heatData[pKey]={long:0, short:shortLiq, price:p};
+    }
+  }
+}
+
+// ===== DRAW =====
+function draw(){
+  if(!currentPrice||!canvas._W) return;
+  const W=canvas._W, H=canvas._H;
+  ctx.clearRect(0,0,W,H);
+
+  const range=priceRange;
+  const low=currentPrice*(1-range);
+  const high=currentPrice*(1+range);
+  const priceToY=p=>H-(p-low)/(high-low)*H;
+  const yToPrice=y=>low+(H-y)/H*(high-low);
+
+  const levels=Object.values(heatData).sort((a,b)=>a.price-b.price);
+  if(!levels.length) return;
+
+  const maxLong=Math.max(...levels.map(l=>l.long))||1;
+  const maxShort=Math.max(...levels.map(l=>l.short))||1;
+
+  const barH=Math.max(2,H/levels.length*1.2);
+
+  // Draw each price level
+  levels.forEach(lvl=>{
+    const y=priceToY(lvl.price);
+
+    if(lvl.long>0){
+      const intensity=lvl.long/maxLong;
+      const barW=Math.max(4, intensity*W*0.45);
+      const alpha=0.15+intensity*0.75;
+      ctx.fillStyle=`rgba(244,67,54,${alpha})`;
+      ctx.fillRect(0,y-barH/2,barW,barH);
+    }
+
+    if(lvl.short>0){
+      const intensity=lvl.short/maxShort;
+      const barW=Math.max(4, intensity*W*0.45);
+      const alpha=0.15+intensity*0.75;
+      ctx.fillStyle=`rgba(0,200,83,${alpha})`;
+      ctx.fillRect(W-barW,y-barH/2,barW,barH);
+    }
+  });
+
+  // Price axis labels (right side)
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.font='10px Inter,sans-serif';
+  ctx.fillStyle='#aaa';
+  const labelCount=12;
+  for(let i=0;i<=labelCount;i++){
+    const p=low+(high-low)*i/labelCount;
+    const y=priceToY(p);
+    ctx.fillText('$'+fmtP(p), W-12, y);
+    ctx.beginPath(); ctx.moveTo(W-80,y); ctx.lineTo(W-72,y);
+    ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=0.5; ctx.stroke();
+  }
+
+  // Current price line
+  const priceY=priceToY(currentPrice);
+  ctx.beginPath(); ctx.moveTo(0,priceY); ctx.lineTo(W,priceY);
+  ctx.strokeStyle='rgba(247,147,26,0.8)'; ctx.lineWidth=2;
+  ctx.setLineDash([6,3]); ctx.stroke(); ctx.setLineDash([]);
+
+  // Price label
+  const lbl=document.getElementById('priceLabel');
+  lbl.style.display='block';
+  lbl.style.top=(priceY+canvas._topH-10)+'px';
+  lbl.textContent='$'+fmtP(currentPrice);
+
+  // Mouse crosshair
+  if(mouseY>0){
+    ctx.beginPath(); ctx.moveTo(0,mouseY); ctx.lineTo(W,mouseY);
+    ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=1;
+    ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // Update stats
+  updateStats(levels,maxLong,maxShort,low,high);
+}
+
+function updateStats(levels,maxLong,maxShort,low,high){
+  // Biggest long liq level (below price)
+  const longLevels=levels.filter(l=>l.price<currentPrice).sort((a,b)=>b.long-a.long);
+  const shortLevels=levels.filter(l=>l.price>currentPrice).sort((a,b)=>b.short-a.short);
+
+  if(longLevels[0]){
+    document.getElementById('sBigLong').textContent='$'+fmtLarge(longLevels[0].long*1000);
+    document.getElementById('sBigLongP').textContent='at $'+fmtP(longLevels[0].price);
+  }
+  if(shortLevels[0]){
+    document.getElementById('sBigShort').textContent='$'+fmtLarge(shortLevels[0].short*1000);
+    document.getElementById('sBigShortP').textContent='at $'+fmtP(shortLevels[0].price);
+  }
+
+  const totalLong=longLevels.reduce((s,l)=>s+l.long,0);
+  const totalShort=shortLevels.reduce((s,l)=>s+l.short,0);
+  document.getElementById('sLongZone').textContent='$'+fmtLarge(totalLong*500);
+  document.getElementById('sShortZone').textContent='$'+fmtLarge(totalShort*500);
+}
+
+// ===== WEBSOCKET =====
+function connectWS(){
+  if(ws) ws.close();
+  const pair=currentPair.toLowerCase();
+  ws=new WebSocket(`wss://stream.binance.com:9443/stream?streams=${pair}@ticker`);
+  ws.onopen=()=>{setWS('on','Live');};
+  ws.onmessage=e=>{
+    const msg=JSON.parse(e.data); const d=msg.data;
+    if(!d||!d.c) return;
+    const newPrice=parseFloat(d.c)||0;
+    const changed=Math.abs(newPrice-currentPrice)/currentPrice>0.0001;
+    currentPrice=newPrice;
+    const chg=parseFloat(d.P)||0;
+    document.getElementById('sPrice').textContent='$'+fmtP(currentPrice);
+    document.getElementById('sChange').textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';
+    document.getElementById('sChange').className='ss '+(chg>=0?'g':'r');
+    if(changed||!Object.keys(heatData).length){ buildHeatData(); }
+    draw();
+  };
+  ws.onerror=()=>setWS('err','Error');
+  ws.onclose=()=>{setWS('','Reconnecting...');setTimeout(connectWS,3000);};
+}
+
+function setWS(cls,label){
+  document.getElementById('wsDot').className='ws-dot '+(cls==='on'?'on':cls==='err'?'err':'');
+  document.getElementById('wsLabel').textContent=label;
+}
+
+// ===== MOUSE =====
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  mouseY=e.clientY-rect.top;
+
+  const range=priceRange;
+  const low=currentPrice*(1-range);
+  const high=currentPrice*(1+range);
+  const H=canvas._H||400;
+  const hoverPrice=low+(H-mouseY)/H*(high-low);
+
+  // Find closest level
+  const levels=Object.values(heatData);
+  let closest=null, minDist=Infinity;
+  levels.forEach(l=>{ const d=Math.abs(l.price-hoverPrice); if(d<minDist){minDist=d;closest=l;} });
+
+  const tt=document.getElementById('tooltip');
+  if(closest&&minDist<(high-low)*0.02){
+    tt.style.display='block';
+    tt.style.left=(e.clientX+14)+'px';
+    tt.style.top=(e.clientY-80)+'px';
+    document.getElementById('ttPrice').textContent='$'+fmtP(closest.price);
+    document.getElementById('ttLong').textContent='$'+fmtLarge(closest.long*1000);
+    document.getElementById('ttShort').textContent='$'+fmtLarge(closest.short*1000);
+    document.getElementById('ttVol').textContent='$'+fmtLarge((closest.long+closest.short)*1000);
+    const dist=Math.abs(closest.price-currentPrice)/currentPrice;
+    const lev=Math.round(1/dist);
+    document.getElementById('ttLev').textContent=Math.min(125,Math.max(1,lev))+'x';
+  } else tt.style.display='none';
+
+  draw();
+});
+canvas.addEventListener('mouseleave',()=>{ mouseY=-1; document.getElementById('tooltip').style.display='none'; draw(); });
+
+// Touch
+canvas.addEventListener('touchmove',e=>{
+  const t=e.touches[0]; const rect=canvas.getBoundingClientRect();
+  mouseY=t.clientY-rect.top; draw();
+},{passive:true});
+
+// ===== CONTROLS =====
+function setPairBtn(p,el){
+  currentPair=p; heatData={};
+  document.querySelectorAll('.pair-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('allPairsSel').value='';
+  connectWS();
+}
+function setPairFromSel(sel){
+  if(!sel.value) return;
+  currentPair=sel.value; heatData={};
+  document.querySelectorAll('.pair-btn').forEach(b=>b.classList.remove('active'));
+  connectWS();
+}
+function setPair(p,el){ setPairBtn(p,el); }
+function setTF(r,el){
+  priceRange=r; heatData={};
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if(currentPrice) buildHeatData();
+  draw();
+}
+
+// ===== FORMAT =====
+function fmtP(n){
+  if(!n)return'—';
+  if(n>=1000)return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(n>=1)return n.toFixed(4);
+  return n.toFixed(6);
+}
+function fmtLarge(n){
+  if(!n)return'—';
+  if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3)return'$'+(n/1e3).toFixed(1)+'K';
+  return'$'+n.toFixed(0);
+}
+
+// Fetch all futures pairs for dropdown
+async function fetchFuturesPairs(){
+  try {
+    const res = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+    const data = await res.json();
+    const sel = document.getElementById('allPairsSel');
+    const pairs = data.symbols
+      .filter(s => s.contractType==='PERPETUAL' && s.status==='TRADING' && s.quoteAsset==='USDT')
+      .map(s => s.symbol)
+      .sort();
+    sel.innerHTML = '<option value="">More pairs (' + pairs.length + ')...</option>' +
+      pairs.map(p => `<option value="${p}">${p.replace('USDT','')}</option>`).join('');
+  } catch(e) {}
+}
+
+// INIT
+resize();
+fetchFuturesPairs();
+connectWS();
+setInterval(()=>{ if(currentPrice){buildHeatData();draw();} },30000);
+</script>
+</body>
+</html>

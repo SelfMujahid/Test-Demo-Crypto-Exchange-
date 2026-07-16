@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestExchange — Spot</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- API Preconnect -->
+  <link rel="preconnect" href="https://api.binance.com">
+  <link rel="preconnect" href="https://stream.binance.com">
+
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/spot.css">
+</head>
+<body>
+
+<header>
+  <div class="top-bar">
+    <a href="index.html" class="logo">
+      <img src="assets/images/logo.webp" alt="TestTrade Logo" class="logo-img">
+      TEST<span>Exchange</span>
+    </a>
+    <div class="testing-tag">⚡ Testing</div>
+  </div>
+  <div class="menu-bar">
+    <a href="index.html" class="menu-btn">Home</a>
+    <a href="spot.html" class="menu-btn active">Spot</a>
+    <a href="futures.html" class="menu-btn">Futures</a>
+    <a href="bot.html" class="menu-btn">Bot</a>
+    <a href="#" class="menu-btn" onclick="toggleVisualMenu(event)">Visual ▾</a>
+    <div id="visualMenu" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 166px rgba(0,0,0,0.1);z-index:999;">
+      <a href="liquidations.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Liquidations</a>
+      <a href="orders.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Order Flow</a>
+      <a href="drop.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Drops</a>
+      <a href="wallet.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;border-bottom:1px solid #f0f0f0;">Wallet Transactions</a>
+      <a href="bubbles.html" style="display:block;padding:10px 16px;font-size:12px;color:#555;text-decoration:none;">Bubbles</a>
+    </div>
+  </div>
+</header>
+
+<!-- PAIR BAR -->
+<div class="pair-bar">
+  <div class="pair-select">
+    <img id="coinLogo" src="" alt="" width="24" height="24">
+    <select id="pairSel">
+      <option>BTC/USDT</option>
+    </select>
+    <span style="font-size:9px;color:var(--muted)" id="pairLoadStatus">Loading...</span>
+  </div>
+
+  <a id="chartToggleBtn" class="chart-btn" title="Chart Toggle">
+    <div class="candle-icon">
+      <div class="candle">
+        <div class="candle-wick" style="height:3px"></div>
+        <div class="candle-body" style="height:9px;background:#00c853"></div>
+        <div class="candle-wick" style="height:2px"></div>
+      </div>
+      <div class="candle">
+        <div class="candle-wick" style="height:2px"></div>
+        <div class="candle-body" style="height:6px;background:#f6465d"></div>
+        <div class="candle-wick" style="height:3px"></div>
+      </div>
+    </div>
+  </a>
+
+  <div class="pair-price" id="pairPrice" style="color:var(--green)">—</div>
+  <div class="pair-chg" id="pairChg">—</div>
+
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#f0f9ff;border:1px solid #cce8f4;border-radius:8px;padding:5px 12px;">
+    <div class="pair-stats">
+      <div class="ps"><div class="ps-lbl">24h High</div><div class="ps-val" id="s-high">—</div></div>
+      <div class="ps"><div class="ps-lbl">24h Low</div><div class="ps-val" id="s-low">—</div></div>
+      <div class="ps"><div class="ps-lbl">24h Volume</div><div class="ps-val" id="s-vol">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN TRADE LAYOUT -->
+<div class="trade-wrap">
+
+  <!-- LEFT: ORDER FORM -->
+  <div class="form-col">
+
+    <!-- Buy / Sell tabs -->
+    <div class="bs-tabs">
+      <button class="bs-tab buy active" data-side="buy">▲ BUY</button>
+      <button class="bs-tab sell" data-side="sell">▼ SELL</button>
+    </div>
+
+    <!-- Order type tabs -->
+    <div class="ot-tabs">
+      <button class="ot-tab active" data-ot="limit">Limit</button>
+      <button class="ot-tab" data-ot="market">Market</button>
+      <button class="ot-tab" data-ot="stoplimit">Stop-Limit</button>
+    </div>
+
+    <div class="form-body">
+
+      <!-- Available balances -->
+      <div class="avail-row">
+        <div class="avail-pill">
+          <div class="avail-pill-lbl">USDT Balance</div>
+          <div class="avail-pill-val" id="availUSDT">$10,000.00</div>
+        </div>
+        <div class="avail-pill">
+          <div class="avail-pill-lbl">Coin Balance</div>
+          <div class="avail-pill-val" id="availCoin">0.000000 BTC</div>
+        </div>
+      </div>
+
+      <!-- Stop price (only for Stop-Limit) -->
+      <div class="f-row" id="stopRow" style="display:none">
+        <div class="f-lbl">Stop Price</div>
+        <div class="inp-wrap">
+          <input type="number" class="f-inp" id="iStop" placeholder="0.00">
+          <span class="inp-sfx">USDT</span>
+        </div>
+      </div>
+
+      <!-- Limit price -->
+      <div class="f-row" id="priceRow">
+        <div class="f-lbl">Price</div>
+        <div class="inp-wrap">
+          <input type="number" class="f-inp" id="iPrice" placeholder="0.00">
+          <span class="inp-sfx">USDT</span>
+        </div>
+      </div>
+
+      <!-- Amount -->
+      <div class="f-row">
+        <div class="f-lbl">Amount <span id="availLbl">Avail: $10,000.00</span></div>
+        <div class="inp-wrap">
+          <input type="number" class="f-inp" id="iAmt" placeholder="0.00">
+          <span class="inp-sfx" id="iSuffix"
+            style="cursor:pointer;color:var(--accent);text-decoration:underline;user-select:none"
+            title="Click to switch USDT / Coin">USDT</span>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">Click <b>USDT</b> to switch unit</div>
+      </div>
+
+      <!-- % quick fill -->
+      <div class="pct-row">
+        <button class="pct-btn" data-pct="10">10%</button>
+        <button class="pct-btn" data-pct="25">25%</button>
+        <button class="pct-btn" data-pct="50">50%</button>
+        <button class="pct-btn" data-pct="75">75%</button>
+        <button class="pct-btn" data-pct="100">100%</button>
+      </div>
+
+      <!-- Order summary -->
+      <div class="cost-box">
+        <div class="c-row"><span>Coin Amount</span><span id="cCoin">—</span></div>
+        <div class="c-row"><span>Order Total</span><span id="cTotal">—</span></div>
+        <div class="c-row"><span>Fee (0.10%)</span><span id="cFee">—</span></div>
+        <div class="c-row"><span>You Pay / Receive</span><span id="cFinal" style="font-weight:700">—</span></div>
+      </div>
+
+    </div>
+
+    <!-- BUY / SELL button -->
+    <button class="action-btn buy" id="btnAction">▲ BUY</button>
+
+  </div>
+
+  <!-- MIDDLE: CHART PLACEHOLDER -->
+  <div class="chart-col">
+    <div class="chart-placeholder">
+      <div class="chart-icon">📈</div>
+      <p>Chart yahan dikhai dega</p>
+      <a href="chart.html" class="open-chart-btn">Open Full Chart</a>
+    </div>
+  </div>
+
+  <!-- RIGHT: ORDER BOOK -->
+  <div class="ob-col">
+    <div class="ob-hdr">
+      <span><span class="live-dot"></span>Order Book</span>
+    </div>
+    <div class="ob-sub-tabs">
+      <button class="ob-sub active" id="subBook">Book</button>
+      <button class="ob-sub" id="subTrades">Trades</button>
+    </div>
+    <div id="bookView">
+      <div class="ob-grid-hdr"><span>Price(USDT)</span><span>Qty</span><span>Total</span></div>
+      <div id="askRows"></div>
+      <div class="ob-mid">
+        <div class="ob-mid-p" id="obMidP">—</div>
+        <div class="ob-mid-s">Spread: <span id="obSpread">—</span></div>
+      </div>
+      <div id="bidRows"></div>
+    </div>
+    <div id="tradesView" style="display:none">
+      <div class="ob-grid-hdr"><span>Price</span><span>Qty</span><span>Time</span></div>
+      <div id="rtRows"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM: OPEN ORDERS + HISTORY -->
+  <div class="pos-col">
+    <div class="pos-tabs">
+      <button class="pos-tab active" id="tabOpenOrders">
+        Open Orders <span id="openCount">(0)</span>
+      </button>
+      <button class="pos-tab" id="tabHistory">
+        Trade History <span id="histCount">(0)</span>
+      </button>
+    </div>
+
+    <!-- Open Orders -->
+    <div id="openTab">
+      <div class="no-pos" id="noPosMsg">📭 Koi open order nahi — Buy ya Sell karo</div>
+      <div style="overflow-x:auto;width:100%">
+        <table class="pos-table" id="posTable" style="display:none;min-width:800px">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Pair</th>
+              <th>Side</th>
+              <th>Type</th>
+              <th>Price</th>
+              <th>Amount</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="posBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Trade History -->
+    <div id="historyTab" style="display:none">
+      <div class="no-pos" id="noHistMsg">📋 Koi trade history nahi</div>
+      <div style="overflow-x:auto;width:100%">
+        <table class="pos-table" id="histTable" style="display:none;min-width:800px">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Pair</th>
+              <th>Side</th>
+              <th>Type</th>
+              <th>Price</th>
+              <th>Amount</th>
+              <th>Total</th>
+              <th>Fee</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/spot.js"></script>
+</body>
+</html>

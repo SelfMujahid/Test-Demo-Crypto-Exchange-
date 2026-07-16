@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestExchange — Liquidations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fstream.binance.com">
+  <link rel="stylesheet" href="assets/css/liquidations.css">
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Back</a>
+
+  <div class="page-title">
+    <span class="live-dot"></span>
+    Liquidations <span id="pageStatus">Connecting...</span>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div class="lbl">Total Liq.</div>
+      <div class="val" id="sTotal">$0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="lbl">Events</div>
+      <div class="val" id="sCount">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="lbl">Longs</div>
+      <div class="val green" id="sLong">$0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="lbl">Shorts</div>
+      <div class="val red" id="sShort">$0</div>
+    </div>
+  </div>
+
+  <!-- TIME WINDOW TABS -->
+  <div class="window-tabs">
+    <button class="win-btn active" onclick="setWindow('session',this)">Session</button>
+    <button class="win-btn" onclick="setWindow('1h',this)">1H</button>
+    <button class="win-btn" onclick="setWindow('4h',this)">4H</button>
+    <button class="win-btn" onclick="setWindow('24h',this)">24H</button>
+  </div>
+
+  <div class="feed-wrap">
+    <div class="feed-list" id="feedList">
+      <div class="empty-msg" id="emptyMsg">Liquidation events wait ho rahe hain...</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn long" onclick="setFilter('long',this)">▲ Longs</button>
+    <button class="filter-btn short" onclick="setFilter('short',this)">▼ Shorts</button>
+  </div>
+
+  <script src="assets/js/liquidations.js"></script>
+</body>
+</html>
