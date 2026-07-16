@@ -1,0 +1,61 @@
+/* =====================================================
+   HOME.CSS — index.html ONLY (live market price table,
+   search, filters). Link this AFTER common.css.
+   ===================================================== */
+
+/* PRICES SECTION TITLE */
+.prices-section-title { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding:0 16px 8px; max-width:900px; margin:0 auto; display:flex; align-items:center; gap:6px; }
+.ldot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 1.5s infinite; display:inline-block; }
+/* FIX: this animation was referenced in the old style.css but @keyframes
+   pulse was never defined anywhere — the dot was silently NOT pulsing.
+   Added it here so the "live" indicator actually animates. */
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.4); } }
+
+/* CONTROLS (search + filter tabs) */
+.controls { position: relative; z-index: 1; padding: 16px 16px 0; max-width: 900px; margin: 0 auto; display: flex; gap: 10px; flex-wrap: wrap; }
+.search-wrap { flex: 1; min-width: 180px; position: relative; }
+.search-input { width: 100%; padding: 10px 16px 10px 38px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: var(--font-body); font-size: 13px; outline: none; transition: border-color 0.2s; }
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--muted); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--muted); }
+.filter-tabs { display: flex; gap: 4px; align-items: center; }
+.filter-btn { padding: 8px 14px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: var(--font-body); transition: all 0.2s; }
+.filter-btn.active { background: rgba(0,212,255,0.12); border-color: var(--accent); color: var(--accent); }
+
+/* TABLE & COIN ROW */
+.table-header { position: relative; z-index: 1; display: grid; grid-template-columns: 40px 2fr 1.2fr 0.9fr 0.9fr 1fr 1.1fr; gap: 8px; padding: 14px 20px 8px; max-width: 900px; margin: 0 auto; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+.th-sortable { cursor: pointer; transition: color 0.2s; }
+.th-sortable:hover { color: var(--accent); }
+.th-right { text-align: right; }
+
+.coin-list { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 0 20px; }
+.coin-row { display: grid; grid-template-columns: 40px 2fr 1.2fr 0.9fr 0.9fr 1fr 1.1fr; gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.15s; text-decoration: none; color: inherit; }
+.coin-row:hover { background: rgba(0,212,255,0.04); }
+
+.rank { font-size: 11px; color: var(--muted); font-weight: 600; text-align: center; }
+.coin-info { display: flex; align-items: center; gap: 10px; }
+.coin-logo { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+.coin-logo-placeholder { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.coin-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.coin-sym { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+
+.price-cell { font-size: 13px; font-weight: 600; color: var(--text); text-align: right; transition: color 0.3s; }
+.price-cell.flash-up { color: var(--green); }
+.price-cell.flash-down { color: var(--red); }
+
+.change-cell { font-size: 12px; font-weight: 700; text-align: right; padding: 3px 8px; border-radius: 6px; width: fit-content; margin-left: auto; }
+.change-cell.up { background: rgba(0,230,118,0.12); color: var(--green); }
+.change-cell.down { background: rgba(255,23,68,0.12); color: var(--red); }
+.mcap-cell, .vol-cell { font-size: 11px; color: var(--muted); text-align: right; }
+
+/* STATS BAR */
+.stats-bar { position: relative; z-index: 1; display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px; max-width: 900px; margin: 0 auto; }
+.stat-pill { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 11px; color: var(--muted); }
+.stat-pill strong { color: var(--text); font-weight: 700; }
+
+/* RESPONSIVE */
+@media (max-width: 500px) {
+  .table-header, .coin-row { grid-template-columns: 30px 2fr 1.1fr 0.9fr 0.9fr; }
+  .table-header .th-mcap, .table-header .th-vol, .coin-row .mcap-cell, .coin-row .vol-cell { display: none; }
+  .coin-logo, .coin-logo-placeholder { width: 28px; height: 28px; }
+}

@@ -1,0 +1,185 @@
+* {
+  margin: 0; padding: 0; box-sizing: border-box;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none;
+}
+body {
+  background-color: transparent !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  height: 100vh; width: 100vw;
+  position: relative;
+}
+
+#neon-base-layer {
+  width: 100%; height: 100vh;
+  position: absolute; top: 0; left: 0; z-index: 1;
+  filter: blur(100px);
+}
+
+.blury-front-layer {
+  width: 100%; height: 100vh;
+  position: absolute; top: 0; left: 0; z-index: 2;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255,255,255,0.8) 0%, transparent 80%),
+    linear-gradient(rgba(255,255,255,0.15), rgba(255,255,255,0.15));
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+}
+
+/* BACK BUTTON — same 3D neumorphic style as site menu buttons */
+.back-btn {
+  position: absolute;
+  top: 12px;
+  left: 15px;
+  z-index: 200;
+  color: #000;
+  text-decoration: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  box-shadow:
+    4px 5px 10px rgba(0,0,0,0.3),
+    -2px -2px 6px rgba(255,255,255,0.6),
+    inset 2px 2px 4px rgba(0,0,0,0.3),
+    inset -4px -4px 8px rgba(255,255,255,0.8);
+  border: 1px solid rgba(0,0,0,0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.back-btn:hover {
+  box-shadow:
+    4px 5px 14px rgba(0,0,0,0.35),
+    -2px -2px 6px rgba(255,255,255,0.6),
+    inset 2px 2px 4px rgba(0,0,0,0.25),
+    inset -4px -4px 8px rgba(255,255,255,0.8);
+}
+
+/* DASHBOARD — pushed down slightly so back button doesn't overlap */
+.dashboard-header {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.06);
+  backdrop-filter: blur(35px) saturate(140%);
+  -webkit-backdrop-filter: blur(35px) saturate(140%);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 15px 35px rgba(255,255,255,0.9), 0 5px 15px rgba(255,255,255,0.5);
+  padding: 15px 20px;
+  border-radius: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  width: 90%; max-width: 650px;
+  text-align: center;
+  z-index: 100;
+}
+
+.stat-box { display: flex; flex-direction: column; justify-content: center; flex: 1; }
+.stat-label {
+  font-size: 10px; color: #6c757d;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  margin-bottom: 3px; font-weight: 600;
+}
+.stat-value {
+  font-size: 15px; font-weight: 700; color: #1e2022;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.btc-logo {
+  background-color: #f7931a; color: white;
+  border-radius: 50%; width: 16px; height: 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: bold;
+}
+
+/* DROPS */
+.element-node {
+  position: absolute;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; font-weight: bold;
+  z-index: 20;
+}
+.shola-base {
+  border-radius: 50% 50% 20% 20% / 80% 80% 40% 40%;
+  display: flex; align-items: center; justify-content: center;
+}
+.red-shola {
+  width: 55px; height: 55px;
+  background: linear-gradient(0deg, #dc2626 0%, #f97316 50%, #facc15 100%);
+  border: 1px solid #ef4444;
+  box-shadow: 0 -5px 15px rgba(239,68,68,0.5);
+  animation: flicker 0.15s ease-in-out infinite alternate;
+}
+.yellow-shola {
+  width: 48px; height: 48px;
+  background: linear-gradient(0deg, #ea580c 0%, #eab308 60%, #fef08a 100%);
+  border: 1px solid #ca8a04;
+  box-shadow: 0 -4px 12px rgba(234,88,12,0.4);
+  animation: flicker 0.18s ease-in-out infinite alternate;
+}
+.blue-shola {
+  width: 42px; height: 42px;
+  background: linear-gradient(0deg, #1d4ed8 0%, #3b82f6 50%, #93c5fd 100%);
+  border: 1px solid #2563eb;
+  box-shadow: 0 -4px 10px rgba(37,99,235,0.4);
+  animation: flicker 0.2s ease-in-out infinite alternate;
+}
+.water-drop {
+  width: 30px; height: 30px;
+  background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+  border: 1px solid #7dd3fc;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  border-radius: 0% 100% 50% 50% / 0% 50% 50% 100%;
+  transform: rotate(45deg);
+}
+@keyframes flicker {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.04); }
+}
+.inner-text {
+  position: absolute; z-index: 22;
+  pointer-events: none; font-size: 8px; color: #ffffff;
+  line-height: 1.0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.water-drop-text {
+  color: #0369a1;
+  position: absolute; top: 15px; left: 0;
+  width: 100%; text-align: center;
+}
+.sub-val { font-size: 7.5px; opacity: 0.85; font-weight: normal; }
+
+@keyframes fall-animation {
+  0%   { opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 105vh; opacity: 0; }
+}
+
+.copy-toast {
+  position: absolute; bottom: 30px; left: 50%;
+  transform: translateX(-50%);
+  background: #1e2022; color: white;
+  padding: 10px 20px; border-radius: 8px;
+  font-size: 13px; z-index: 200; display: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.drop-btc-logo-top {
+  background-color: #f7931a; color: white !important;
+  border-radius: 50%; width: 10px; height: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: bold;
+  margin-top: -13px; margin-bottom: 1px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.cat-title  { font-size: 10px; font-weight: bold; }
+.cat-count  { font-size: 11px; font-weight: 700; color: #1e2022; }
+.cat-btc    { font-size: 9px; color: #444; }
+.cat-usd    { font-size: 8px; color: #03a66d; font-weight: 600; }
