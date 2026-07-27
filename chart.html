@@ -1,312 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Crypto Dashboard</title>
-    <!-- Tailwind CSS for UI -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- TradingView Lightweight Charts Library -->
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestExchange — Chart</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.binance.com">
+  <link rel="preconnect" href="https://stream.binance.com">
+  <link rel="preconnect" href="https://api.coingecko.com">
+  <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+  <link rel="stylesheet" href="assets/css/chart.css">
 </head>
-<body id="body" class="bg-gray-900 text-white min-h-screen transition-colors duration-300">
+<body>
 
-    <div class="container mx-auto p-4 lg:p-6">
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md" id="headerCard">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl font-black bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">CRYPTOFLOW</span>
-                <span id="livePrice" class="text-xl font-mono text-green-400 animate-pulse">Loading...</span>
-            </div>
-            
-            <!-- Quick Settings Bar -->
-            <div class="flex flex-wrap items-center gap-4">
-                <!-- Pair Selector -->
-                <div>
-                    <label class="text-xs text-gray-400 block mb-1">Select Pair</label>
-                    <select id="pairSelect" class="bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm font-semibold outline-none cursor-pointer focus:border-amber-500">
-                        <option value="btcusdt">BTC / USDT</option>
-                        <option value="ethusdt">ETH / USDT</option>
-                        <option value="solusdt">SOL / USDT</option>
-                        <option value="bnbusdt">BNB / USDT</option>
-                    </select>
-                </div>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <span>Market data load ho rahi hai...</span>
+</div>
 
-                <!-- Theme Toggle -->
-                <div>
-                    <label class="text-xs text-gray-400 block mb-1">Theme</label>
-                    <button id="themeBtn" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded px-3 py-1.5 text-sm font-semibold cursor-pointer">
-                        ☀️ Light Mode
-                    </button>
-                </div>
-            </div>
-        </header>
+<div class="topbar" id="topbar">
 
-        <!-- Main Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            
-            <!-- Customization Sidebar -->
-            <aside class="bg-gray-800 border border-gray-700 p-5 rounded-xl shadow-md flex flex-col gap-5" id="sidebarCard">
-                <h3 class="font-bold text-lg border-b border-gray-700 pb-2 text-amber-400">Chart Customizer</h3>
-                
-                <!-- Chart Styles -->
-                <div>
-                    <label class="block text-sm font-medium mb-2 text-gray-300">Chart Style</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button id="btnCandle" class="bg-amber-500 text-gray-900 font-bold py-1.5 px-2 text-xs rounded text-center cursor-pointer">Candles</button>
-                        <button id="btnLine" class="bg-gray-700 hover:bg-gray-600 py-1.5 px-2 text-xs rounded text-center cursor-pointer">Line</button>
-                        <button id="btnArea" class="bg-gray-700 hover:bg-gray-600 py-1.5 px-2 text-xs rounded text-center cursor-pointer">Area</button>
-                    </div>
-                </div>
+  <div class="tb-row">
+    <a href="futures.html" class="back-btn">← Back</a>
 
-                <!-- Color Pickers -->
-                <div id="candleColorSettings" class="flex flex-col gap-3">
-                    <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Candle Custom Colors</h4>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-300">Bullish (Up):</span>
-                        <input type="color" id="upColor" value="#26a69a" class="w-8 h-8 rounded border-none cursor-pointer bg-transparent">
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-300">Bearish (Down):</span>
-                        <input type="color" id="downColor" value="#ef5350" class="w-8 h-8 rounded border-none cursor-pointer bg-transparent">
-                    </div>
-                </div>
-
-                <!-- Grid Options -->
-                <div>
-                    <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Grid Visibility</h4>
-                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                        <input type="checkbox" id="toggleGrid" checked class="accent-amber-500"> Show Grid Lines
-                    </label>
-                </div>
-            </aside>
-
-            <!-- Chart Display -->
-            <main class="lg:col-span-3 bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md relative min-h-[450px]" id="chartCard">
-                <!-- Main Chart Root Div -->
-                <div id="chartContainer" class="w-full h-[450px]"></div>
-            </main>
-
-        </div>
+    <div class="gstat">
+      <span class="gl">Global MCap</span>
+      <span class="gv num" id="gMcap">—</span>
+    </div>
+    <div class="gstat">
+      <span class="gl">24h Vol</span>
+      <span class="gv num" id="gVol">—</span>
+    </div>
+    <div class="gstat">
+      <span class="gl">BTC Dom.</span>
+      <span class="gv num" id="gDom">—</span>
+    </div>
+    <div class="gstat">
+      <span class="gl">ETH Dom.</span>
+      <span class="gv num" id="gDomEth">—</span>
+    </div>
+    <div class="gstat">
+      <span class="gl">Alt Dom.</span>
+      <span class="gv num" id="gDomAlt">—</span>
+    </div>
+    <div class="gstat">
+      <span class="gl">Funding Rate</span>
+      <span class="gv num" id="gFunding">—</span>
     </div>
 
-    <!-- Core Script Logic -->
-    <script>
-        // DOM Elements
-        const body = document.getElementById('body');
-        const headerCard = document.getElementById('headerCard');
-        const sidebarCard = document.getElementById('sidebarCard');
-        const chartCard = document.getElementById('chartCard');
-        const pairSelect = document.getElementById('pairSelect');
-        const livePrice = document.getElementById('livePrice');
-        const themeBtn = document.getElementById('themeBtn');
-        const btnCandle = document.getElementById('btnCandle');
-        const btnLine = document.getElementById('btnLine');
-        const btnArea = document.getElementById('btnArea');
-        const upColorInput = document.getElementById('upColor');
-        const downColorInput = document.getElementById('downColor');
-        const toggleGrid = document.getElementById('toggleGrid');
-        const candleColorSettings = document.getElementById('candleColorSettings');
+    <div class="layout-group" id="layoutGroup">
+      <button class="layout-btn active" onclick="setLayout(1,this)">1</button>
+      <button class="layout-btn" onclick="setLayout(2,this)">2</button>
+      <button class="layout-btn" onclick="setLayout(3,this)">3</button>
+      <button class="layout-btn" onclick="setLayout(4,this)">4</button>
+      <button class="layout-btn" onclick="setLayout(6,this)">6</button>
+    </div>
+  </div>
 
-        // State Variables
-        let currentPair = 'btcusdt';
-        let currentChartType = 'candle'; // candle, line, area
-        let isDarkMode = true;
-        let socket;
-        let chart;
-        let currentSeries;
+</div>
 
-        // Default Theme Configuration Objects
-        const themes = {
-            dark: {
-                bg: '#111827', cardBg: '#1f2937', text: '#ffffff', grid: '#374151', border: '#4b5563'
-            },
-            light: {
-                bg: '#f3f4f6', cardBg: '#ffffff', text: '#1f2937', grid: '#e5e7eb', border: '#d1d5db'
-            }
-        };
+<!-- CHART GRID (rebuilt dynamically by JS based on layout) -->
+<div class="chart-grid" id="chartGrid"></div>
 
-        // --- 1. Chart Initialization ---
-        const container = document.getElementById('chartContainer');
-        
-        function initChart() {
-            if (chart) {
-                container.innerHTML = '';
-            }
+<!-- SEARCHABLE PAIR DROPDOWN (shared, repositioned per instance) -->
+<div class="pair-dropdown" id="pairDropdown">
+  <div class="pd-search"><input type="text" id="pdSearchInput" placeholder="Search all Binance coins..."></div>
+  <div class="pd-list" id="pdList"></div>
+</div>
 
-            const currentThemeConf = isDarkMode ? themes.dark : themes.light;
+<!-- INDICATORS / CUSTOM BUILDER MODAL -->
+<div class="modal-overlay" id="indModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span class="modal-title">Indicators</span>
+      <span class="modal-close" onclick="closeIndModal()">✕</span>
+    </div>
 
-            chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth,
-                height: 450,
-                layout: {
-                    background: { type: 'solid', color: currentThemeConf.cardBg },
-                    textColor: currentThemeConf.text,
-                },
-                grid: {
-                    vertLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
-                    horzLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
-                },
-                timeScale: { borderColor: currentThemeConf.border, timeVisible: true },
-                rightPriceScale: { borderColor: currentThemeConf.border }
-            });
+    <div class="tab-switch">
+      <button class="active" onclick="switchIndTab('library',this)">Library</button>
+      <button onclick="switchIndTab('custom',this)">Build Custom</button>
+    </div>
 
-            createSeries();
-        }
+    <!-- LIBRARY TAB -->
+    <div class="tab-panel active" id="tabLibrary">
+      <div class="ind-section-title">Overlays (on price chart)</div>
+      <div id="overlayList"></div>
+      <div class="ind-section-title">Oscillator (pick one)</div>
+      <div id="oscList"></div>
+      <div class="ind-section-title">Extra Panes</div>
+      <div id="extraList"></div>
+    </div>
 
-        // --- 2. Create Specific Chart Style Series ---
-        function createSeries() {
-            const upC = upColorInput.value;
-            const downC = downColorInput.value;
+    <!-- CUSTOM BUILDER TAB -->
+    <div class="tab-panel" id="tabCustom">
+      <div class="tab-switch" style="margin-bottom:12px;">
+        <button class="active" onclick="switchBuilderMode('formula',this)">Formula (Easy)</button>
+        <button onclick="switchBuilderMode('code',this)">Write Code (Advanced)</button>
+      </div>
 
-            if (currentChartType === 'candle') {
-                candleColorSettings.style.opacity = '1';
-                currentSeries = chart.addCandlestickSeries({
-                    upColor: upC, downColor: downC,
-                    borderUpColor: upC, borderDownColor: downC,
-                    wickUpColor: upC, wickDownColor: downC,
-                });
-            } else if (currentChartType === 'line') {
-                candleColorSettings.style.opacity = '0.4';
-                currentSeries = chart.addLineSeries({ color: upC, lineWidth: 2 });
-            } else if (currentChartType === 'area') {
-                candleColorSettings.style.opacity = '0.4';
-                currentSeries = chart.addAreaSeries({
-                    topColor: `${upC}80`, bottomColor: `${upC}05`, lineColor: upC, lineWidth: 2
-                });
-            }
-        }
+      <!-- FORMULA MODE -->
+      <div id="builderFormula">
+        <div class="cb-row">
+          <span class="cb-lbl">Name</span>
+          <input class="cb-input" id="cbName" placeholder="e.g. My MA 50">
+        </div>
+        <div class="cb-row-2">
+          <div class="cb-row">
+            <span class="cb-lbl">Type</span>
+            <select class="cb-select" id="cbType">
+              <option value="sma">Simple Moving Average</option>
+              <option value="ema">Exponential Moving Average</option>
+              <option value="diff">Price vs MA % Difference (oscillator)</option>
+            </select>
+          </div>
+          <div class="cb-row">
+            <span class="cb-lbl">Source</span>
+            <select class="cb-select" id="cbSource">
+              <option value="close">Close</option>
+              <option value="open">Open</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+              <option value="hl2">(High+Low)/2</option>
+            </select>
+          </div>
+        </div>
+        <div class="cb-row-2">
+          <div class="cb-row">
+            <span class="cb-lbl">Length</span>
+            <input class="cb-input" id="cbLength" type="number" value="20" min="2" max="500">
+          </div>
+          <div class="cb-row">
+            <span class="cb-lbl">Color</span>
+            <input class="cb-input" id="cbColor" type="color" value="#00b4d8">
+          </div>
+        </div>
+        <button class="cb-add-btn" onclick="addCustomIndicator()">+ Add to Chart</button>
+      </div>
 
-        // --- 3. Binance WebSocket Stream Connection ---
-        function connectWebSocket() {
-            if (socket) {
-                socket.close();
-            }
+      <!-- CODE MODE -->
+      <div id="builderCode" style="display:none">
+        <div class="cb-row">
+          <span class="cb-lbl">Name</span>
+          <input class="cb-input" id="ccName" placeholder="e.g. My Custom Oscillator">
+        </div>
+        <div class="cb-row">
+          <span class="cb-lbl">JavaScript — return a number for bar index "i" (or undefined to skip)</span>
+          <textarea id="ccCode" rows="8" style="font-family:monospace;font-size:11px;padding:10px;border:1px solid #e0e0e0;border-radius:8px;resize:vertical;" placeholder="// Available: candles[], i, close(i), open(i), high(i), low(i), volume(i)
+// Helpers: sma(period,i), ema(period,i), rsi(period,i)
+// Example: 20-bar SMA of (high+low)/2
+if (i < 20) return undefined;
+return sma(20, i, k => (high(k)+low(k))/2);"></textarea>
+        </div>
+        <div class="cb-row-2">
+          <div class="cb-row">
+            <span class="cb-lbl">Plot As</span>
+            <select class="cb-select" id="ccPlotType">
+              <option value="overlay">Overlay (on price chart)</option>
+              <option value="oscillator">Separate Pane (oscillator)</option>
+            </select>
+          </div>
+          <div class="cb-row">
+            <span class="cb-lbl">Color</span>
+            <input class="cb-input" id="ccColor" type="color" value="#e91e63">
+          </div>
+        </div>
+        <button class="cb-add-btn" onclick="addCodeIndicator()">▶ Run &amp; Add to Chart</button>
+        <div id="ccError" style="color:#e53935;font-size:11px;margin-top:8px;display:none;"></div>
+      </div>
 
-            livePrice.innerText = "Connecting...";
-            // Historical Data pull karne ke bajaye real-time data standard format par initialize hoga
-            let isFirstTick = true;
+      <div class="cb-custom-list" id="customList"></div>
+      <div style="font-size:10px;color:#bbb;margin-top:10px;line-height:1.5;">
+        Code mode aapka JS chalata hai browser mein hi (sandboxed try/catch ke saath) — yeh TradingView ka poora Pine Script engine nahi hai (koi alerts/strategy-backtesting nahi), lekin real per-candle JS logic likh kar genuinely custom indicator plot kar sakte hain.
+      </div>
+    </div>
 
-            socket = new WebSocket(`wss://stream.binance.com:9443/ws/${currentPair}@kline_1m`);
+  </div>
+</div>
 
-            socket.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                const kline = msg.k;
-
-                const price = parseFloat(kline.c).toFixed(2);
-                livePrice.innerText = `${currentPair.toUpperCase().replace('USDT','/USDT')}: $${price}`;
-                
-                // Color formatting based on pump/dump
-                if(parseFloat(kline.c) >= parseFloat(kline.o)) {
-                    livePrice.style.color = upColorInput.value;
-                } else {
-                    livePrice.style.color = downColorInput.value;
-                }
-
-                // Data object structured dynamically based on active chart style
-                let dataPoint;
-                if (currentChartType === 'candle') {
-                    dataPoint = {
-                        time: kline.t / 1000,
-                        open: parseFloat(kline.o),
-                        high: parseFloat(kline.h),
-                        low: parseFloat(kline.l),
-                        close: parseFloat(kline.c)
-                    };
-                } else {
-                    dataPoint = {
-                        time: kline.t / 1000,
-                        value: parseFloat(kline.c)
-                    };
-                }
-
-                currentSeries.update(dataPoint);
-            };
-        }
-
-        // --- 4. Event Handlers & Dynamic Controls ---
-
-        // Change Crypto Pair
-        pairSelect.addEventListener('change', (e) => {
-            currentPair = e.target.value;
-            initChart();
-            connectWebSocket();
-        });
-
-        // Toggle Grid Visibility
-        toggleGrid.addEventListener('change', () => {
-            const currentThemeConf = isDarkMode ? themes.dark : themes.light;
-            chart.applyOptions({
-                grid: {
-                    vertLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
-                    horzLines: { color: toggleGrid.checked ? currentThemeConf.grid : 'transparent' },
-                }
-            });
-        });
-
-        // Real-time Color Customization Update
-        const updateColors = () => {
-            const upC = upColorInput.value;
-            const downC = downColorInput.value;
-            
-            if (currentChartType === 'candle') {
-                currentSeries.applyOptions({
-                    upColor: upC, downColor: downC,
-                    borderUpColor: upC, borderDownColor: downC,
-                    wickUpColor: upC, wickDownColor: downC
-                });
-            } else if (currentChartType === 'line') {
-                currentSeries.applyOptions({ color: upC });
-            } else if (currentChartType === 'area') {
-                currentSeries.applyOptions({ topColor: `${upC}80`, lineColor: upC });
-            }
-        };
-
-        upColorInput.addEventListener('input', updateColors);
-        downColorInput.addEventListener('input', updateColors);
-
-        // Chart Style Type Toggles
-        const setStyleButtonActive = (activeBtn) => {
-            [btnCandle, btnLine, btnArea].forEach(btn => {
-                btn.className = "bg-gray-700 hover:bg-gray-600 py-1.5 px-2 text-xs rounded text-center cursor-pointer";
-            });
-            activeBtn.className = "bg-amber-500 text-gray-900 font-bold py-1.5 px-2 text-xs rounded text-center cursor-pointer";
-        };
-
-        btnCandle.addEventListener('click', () => { currentChartType = 'candle'; setStyleButtonActive(btnCandle); initChart(); connectWebSocket(); });
-        btnLine.addEventListener('click', () => { currentChartType = 'line'; setStyleButtonActive(btnLine); initChart(); connectWebSocket(); });
-        btnArea.addEventListener('click', () => { currentChartType = 'area'; setStyleButtonActive(btnArea); initChart(); connectWebSocket(); });
-
-        // Dark / Light Theme Customizer Switch
-        themeBtn.addEventListener('click', () => {
-            isDarkMode = !isDarkMode;
-            if (isDarkMode) {
-                themeBtn.innerText = "☀️ Light Mode";
-                body.className = "bg-gray-900 text-white min-h-screen transition-colors duration-300";
-                headerCard.className = "flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md";
-                sidebarCard.className = "bg-gray-800 border border-gray-700 p-5 rounded-xl shadow-md flex flex-col gap-5";
-                chartCard.className = "lg:col-span-3 bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-md relative min-h-[450px]";
-            } else {
-                themeBtn.innerText = "🌙 Dark Mode";
-                body.className = "bg-gray-100 text-gray-900 min-h-screen transition-colors duration-300";
-                headerCard.className = "flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-md";
-                sidebarCard.className = "bg-white border border-gray-200 p-5 rounded-xl shadow-md flex flex-col gap-5";
-                chartCard.className = "lg:col-span-3 bg-white border border-gray-200 p-4 rounded-xl shadow-md relative min-h-[450px]";
-            }
-            initChart();
-            connectWebSocket();
-        });
-
-        // Window Resize Handling
-        window.addEventListener('resize', () => {
-            if(chart && container) {
-                chart.resize(container.clientWidth, 450);
-            }
-        });
-
-        // Runtime Start
-        initChart();
-        connectWebSocket();
-    </script>
+<script src="assets/js/chart.js"></script>
 </body>
 </html>
